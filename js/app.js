@@ -1052,9 +1052,6 @@ function renderDashboard() {
   const totalNetAssetsKRW = totalEvaluationKRW + totalPoolKRW;
 
   const totalPnLKRW = totalEvaluationKRW - totalInvestmentKRW;
-  const formattedRateStr = `실시간 환율: $1 = ₩${currentExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-    if (el) el.textContent = formattedRateStr;
-  });
   document.getElementById('total-assets-val').textContent = `₩${Math.round(totalNetAssetsKRW).toLocaleString()}`;
   
   const usdConvertedKRW = totalUSDAsset * currentExchangeRate;
