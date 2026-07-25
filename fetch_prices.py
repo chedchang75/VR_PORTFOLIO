@@ -11,7 +11,7 @@ def get_usd_krw_rate():
             return data['rates']['KRW']
     except Exception as e:
         print(f"Exchange rate fetch error: {e}")
-        return 1385.0
+        return 1462.59
 
 def get_stock_price(ticker):
     # 한국 주식 (6자리 숫자)

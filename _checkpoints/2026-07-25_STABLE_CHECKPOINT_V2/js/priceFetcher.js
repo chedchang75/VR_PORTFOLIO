@@ -133,7 +133,7 @@ export class PriceFetcher {
     ]);
 
     const rateResult = results[0];
-    const rate = (rateResult.status === 'fulfilled' && rateResult.value) ? rateResult.value : 1385.0;
+    const rate = (rateResult.status === 'fulfilled' && rateResult.value) ? rateResult.value : 1462.59;
 
     stocks.forEach((stock, idx) => {
       const pResult = results[idx + 1];

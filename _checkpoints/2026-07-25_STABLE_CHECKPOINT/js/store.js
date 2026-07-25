@@ -30,7 +30,7 @@ const sampleTqqqHistory = [
 ];
 
 export const initialData = {
-  usdExchangeRate: 1385.0,
+  usdExchangeRate: 1462.59,
   stocks: [
     {
       id: 'stk_1',
@@ -151,7 +151,7 @@ export class Store {
   }
 
   getExchangeRate() {
-    return this.data.usdExchangeRate || 1385.0;
+    return this.data.usdExchangeRate || 1462.59;
   }
 
   setExchangeRate(rate) {

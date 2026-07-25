@@ -16,9 +16,10 @@
     <header class="app-header">
       <div>
         <h1 class="app-title">VR 모바일 포트폴리오</h1>
-        <span style="font-size:0.75rem; color:var(--text-sub);" id="header-exchange-rate">실시간 환율: $1 = ₩1,462.59</span>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="btn-github-link" title="GitHub 저장소 바로가기 (chedchang75/VR_PORTFOLIO)" onclick="window.open('https://github.com/chedchang75/VR_PORTFOLIO', '_blank')">🐙</button>
+        <button class="icon-btn" id="btn-github-sync" title="GitHub 저장소 데이터 최신 동기화">☁️</button>
         <button class="icon-btn" id="btn-export-json" title="PC/모바일 데이터 백업 (내보내기)">📤</button>
         <button class="icon-btn" id="btn-import-json" title="PC/모바일 데이터 복원 (불러오기)">📥</button>
         <input type="file" id="import-json-file" accept=".json" style="display:none;">
@@ -30,7 +31,6 @@
     <div class="glass-card summary-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
         <div class="summary-title">총 순자산 평가액 (원화 통합)</div>
-        <span class="exchange-rate-badge" id="header-exchange-rate">실시간 환율: $1 = ₩1,385</span>
       </div>
       <div class="total-assets-val" id="total-assets-val">₩0</div>
 

@@ -41,7 +41,22 @@ function initApp() {
 function bindBackupEvents() {
   const btnExport = document.getElementById('btn-export-json');
   const btnImport = document.getElementById('btn-import-json');
+  const btnGithubSync = document.getElementById('btn-github-sync');
   const fileInput = document.getElementById('import-json-file');
+
+  if (btnGithubSync) {
+    btnGithubSync.addEventListener('click', async () => {
+      if (confirm('☁️ GitHub 저장소 (chedchang75/VR_PORTFOLIO)의 최신 데이터로 동기화하시겠습니까?')) {
+        const res = await appStore.syncFromGitHubRepository();
+        alert(res.message);
+        if (res.success) {
+          renderDashboard();
+          renderTransactions();
+          renderStrategies();
+        }
+      }
+    });
+  }
 
   if (btnExport) {
     btnExport.addEventListener('click', () => {
@@ -1037,9 +1052,9 @@ function renderDashboard() {
   const totalNetAssetsKRW = totalEvaluationKRW + totalPoolKRW;
 
   const totalPnLKRW = totalEvaluationKRW - totalInvestmentKRW;
-  const totalPnLPercent = totalInvestmentKRW > 0 ? (totalPnLKRW / totalInvestmentKRW) * 100 : 0;
-
-  document.getElementById('header-exchange-rate').textContent = `실시간 환율: $1 = ₩${currentExchangeRate.toLocaleString()}`;
+  const formattedRateStr = `실시간 환율: $1 = ₩${currentExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    if (el) el.textContent = formattedRateStr;
+  });
   document.getElementById('total-assets-val').textContent = `₩${Math.round(totalNetAssetsKRW).toLocaleString()}`;
   
   const usdConvertedKRW = totalUSDAsset * currentExchangeRate;

@@ -169,7 +169,7 @@ export class Store {
   }
 
   getExchangeRate() {
-    return this.data.usdExchangeRate || 1385.0;
+    return this.data.usdExchangeRate || 1462.59;
   }
 
   setExchangeRate(rate) {
@@ -435,6 +435,24 @@ export class Store {
       stock.holdings = Math.max(0, currentQty);
       stock.avgPrice = currentQty > 0 ? totalCost / currentQty : 0;
     }
+  }
+
+  async syncFromGitHubRepository() {
+    const rawBackupUrl = 'https://raw.githubusercontent.com/chedchang75/VR_PORTFOLIO/main/db%ED%8C%8C%EC%9D%BC/VR_Portfolio_Backup_2026-07-25.json';
+    try {
+      const res = await fetch(`${rawBackupUrl}?cacheBust=${Date.now()}`);
+      if (res.ok) {
+        const remoteData = await res.json();
+        if (remoteData && remoteData.stocks) {
+          this.data = remoteData;
+          this.saveData();
+          return { success: true, message: 'GitHub 저장소 데이터와 성공적으로 동기화되었습니다.' };
+        }
+      }
+    } catch (e) {
+      console.error('GitHub fetch failed:', e);
+    }
+    return { success: false, message: 'GitHub 저장소 데이터를 불러오는데 실패했습니다.' };
   }
 }
 
