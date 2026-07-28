@@ -852,10 +852,12 @@ body {
     <main id="view-transactions" class="tab-view">
       <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <h2 class="section-title">거래 내역 (매매 일지)</h2>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-size:0.75rem; color:var(--text-sub);">종목 필터:</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-primary" id="btn-add-tx-direct" style="padding:6px 12px; font-size:0.75rem; font-weight:700;">+ 거래 기록 추가</button>
+          <span style="font-size:0.75rem; color:var(--text-sub);">종목:</span>
           <select id="tx-stock-filter-select" class="form-select" style="padding:4px 8px; font-size:0.78rem; font-weight:700;">
             <option value="ALL">전체 종목 보기</option>
+            <!-- stock options dynamically populated by JS -->
           </select>
         </div>
       </div>
@@ -1542,14 +1544,25 @@ body {
           }
 
           if (summaryCard) {
-            if (targetTab === 'dashboard') {
-              summaryCard.style.display = 'block';
-            } else {
-              summaryCard.style.display = 'none';
-            }
+            summaryCard.style.display = (targetTab === 'dashboard') ? 'block' : 'none';
+          }
+
+          if (targetTab === 'transactions') {
+            renderTransactions();
+          } else if (targetTab === 'strategy') {
+            renderStrategies();
+          } else if (targetTab === 'dashboard') {
+            renderDashboard();
           }
         });
       });
+
+      const btnAddTxDirect = document.getElementById('btn-add-tx-direct');
+      if (btnAddTxDirect) {
+        btnAddTxDirect.addEventListener('click', () => {
+          openTradeModal();
+        });
+      }
     }
 
     function bindDetailModalTabs() {
@@ -1858,6 +1871,50 @@ body {
       }
     }
 
+    function deleteTxDirect(txId) {
+      if (confirm('이 매매일지 거래 기록을 삭제하시겠습니까?')) {
+        appStore.data.transactions = (appStore.data.transactions || []).filter(t => t.id !== txId);
+        appStore.saveData();
+        renderTransactions();
+        renderDashboard();
+      }
+    }
+
+    function openEditStrategyModal(stockId) {
+      const stock = appStore.getStocks().find(s => s.id === stockId);
+      if (!stock) return;
+
+      const newCycle = prompt(`[${stock.name}] 리밸런싱 주차 주기를 입력하세요 (1, 2, 3, 4주차):`, stock.cycleWeeks || 2);
+      if (newCycle === null) return;
+
+      const newBand = prompt(`[${stock.name}] VR 밴드 비율 (%)을 입력하세요:`, stock.vrBandPercent || 15);
+      if (newBand === null) return;
+
+      const newG = prompt(`[${stock.name}] 적립 지수 (G)를 입력하세요:`, stock.G || 15);
+      if (newG === null) return;
+
+      const newStep = prompt(`[${stock.name}] 수량 주문단위 (주)를 입력하세요:`, stock.qtyStep || 10);
+      if (newStep === null) return;
+
+      const newBuy = prompt(`[${stock.name}] 목표 매수가를 입력하세요 (${stock.currency || 'KRW'}):`, stock.targetBuyPrice || 0);
+      if (newBuy === null) return;
+
+      const newSell = prompt(`[${stock.name}] 목표 매도가를 입력하세요 (${stock.currency || 'KRW'}):`, stock.targetSellPrice || 0);
+      if (newSell === null) return;
+
+      stock.cycleWeeks = parseInt(newCycle) || stock.cycleWeeks;
+      stock.vrBandPercent = parseFloat(newBand) || stock.vrBandPercent;
+      stock.G = parseFloat(newG) || stock.G;
+      stock.qtyStep = parseInt(newStep) || stock.qtyStep;
+      stock.targetBuyPrice = parseFloat(newBuy) || stock.targetBuyPrice;
+      stock.targetSellPrice = parseFloat(newSell) || stock.targetSellPrice;
+
+      appStore.saveData();
+      alert(`✅ [${stock.name}] 매매 전략 파라미터가 성공적으로 반영되었습니다.`);
+      renderStrategies();
+      renderDashboard();
+    }
+
     function renderTransactions(filterStockId = 'ALL') {
       const txs = appStore.getTransactions();
       const stocks = appStore.getStocks();
@@ -1866,17 +1923,20 @@ body {
 
       if (!txContainer) return;
 
-      if (filterSelect && filterSelect.options.length <= 1) {
+      if (filterSelect) {
+        const currentVal = filterSelect.value || filterStockId;
+        filterSelect.innerHTML = '<option value="ALL">전체 종목 보기</option>';
         stocks.forEach(stk => {
           const opt = document.createElement('option');
           opt.value = stk.id;
           opt.textContent = `${stk.name} (${stk.code})`;
+          if (stk.id === currentVal) opt.selected = true;
           filterSelect.appendChild(opt);
         });
 
-        filterSelect.addEventListener('change', () => {
+        filterSelect.onchange = () => {
           renderTransactions(filterSelect.value);
-        });
+        };
       }
 
       const filteredTxs = filterStockId === 'ALL' ? txs : txs.filter(t => t.stockId === filterStockId);
@@ -1884,7 +1944,7 @@ body {
       txContainer.innerHTML = '';
       if (filteredTxs.length === 0) {
         txContainer.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.85rem;">
-          ${filterStockId === 'ALL' ? '기록된 거래 내역이 없습니다.' : '선택한 종목의 매매일지 거래 내역이 없습니다.'}
+          ${filterStockId === 'ALL' ? '기록된 거래 내역이 없습니다. 상단 "+ 거래 기록 추가" 버튼으로 입력해보세요.' : '선택한 종목의 매매일지 거래 내역이 없습니다.'}
         </div>`;
         return;
       }
@@ -1893,6 +1953,12 @@ body {
         const stock = stocks.find(s => s.id === tx.stockId) || { name: '알 수 없음', currency: 'KRW' };
         const item = document.createElement('div');
         item.className = 'tx-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.padding = '12px';
+        item.style.borderBottom = '1px solid var(--border-color)';
+
         item.innerHTML = `
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
@@ -1901,9 +1967,12 @@ body {
             </div>
             <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${tx.date}</div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.95rem; font-weight:600;">${tx.quantity.toLocaleString()}주 @ ${formatCurrency(tx.price, stock.currency)}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">수수료: ${formatCurrency(tx.fee || 0, stock.currency)}</div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="text-align:right;">
+              <div style="font-size:0.95rem; font-weight:600;">${tx.quantity.toLocaleString()}주 @ ${formatCurrency(tx.price, stock.currency)}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">수수료: ${formatCurrency(tx.fee || 0, stock.currency)}</div>
+            </div>
+            <button class="icon-btn" onclick="deleteTxDirect('${tx.id}')" title="거래 내역 삭제" style="color:#f87171; padding:4px 6px; border:none; background:transparent; cursor:pointer;">🗑️</button>
           </div>
         `;
         txContainer.appendChild(item);
@@ -1919,17 +1988,29 @@ body {
       stocks.forEach(stock => {
         const card = document.createElement('div');
         card.className = 'glass-card';
-        card.style.marginBottom = '12px';
+        card.style.marginBottom = '14px';
         card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="font-size:1rem; font-weight:700;">${stock.name} (${stock.code})</h4>
-            <span style="font-size:0.8rem; background:rgba(99,102,241,0.2); color:#8b5cf6; padding:2px 8px; border-radius:12px;">${stock.strategyType || 'VR'}</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <h4 style="font-size:1.05rem; font-weight:700;">${stock.name} (${stock.code})</h4>
+              <span style="font-size:0.75rem; color:var(--text-sub);">통화: ${stock.currency || 'KRW'} | 보유: ${(stock.holdings || 0).toLocaleString()}주</span>
+            </div>
+            <span class="exchange-rate-badge">${stock.strategyType || 'VR'}</span>
           </div>
-          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; font-size:0.82rem;">
-            <div>주차 주기: <strong>${stock.cycleWeeks || 2}주차</strong></div>
-            <div>VR 밴드: <strong>±${stock.vrBandPercent || 15}%</strong></div>
-            <div>G 계수: <strong>G=${stock.G || 15}</strong></div>
-            <div>체결간격: <strong>${stock.qtyStep || 20}주</strong></div>
+
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; font-size:0.85rem; background:rgba(15,23,42,0.6); padding:12px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px;">
+            <div>리밸런싱 주기: <strong style="color:#a5b4fc;">${stock.cycleWeeks || 2}주차</strong></div>
+            <div>VR 밴드 비율: <strong style="color:#a5b4fc;">±${stock.vrBandPercent || 15}%</strong></div>
+            <div>적립 지수(G): <strong style="color:#a5b4fc;">${stock.G || 15}</strong></div>
+            <div>수량 주문단위: <strong style="color:#a5b4fc;">${stock.qtyStep || 10}주</strong></div>
+            <div>목표 매수가: <strong style="color:#34d399;">${formatCurrency(stock.targetBuyPrice || 0, stock.currency)}</strong></div>
+            <div>목표 매도가: <strong style="color:#f87171;">${formatCurrency(stock.targetSellPrice || 0, stock.currency)}</strong></div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-primary" onclick="openEditStrategyModal('${stock.id}')" style="padding:6px 14px; font-size:0.78rem; font-weight:700;">
+              ⚙️ 전략 파라미터 수정
+            </button>
           </div>
         `;
         container.appendChild(card);

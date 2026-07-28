@@ -82,8 +82,9 @@
     <main id="view-transactions" class="tab-view">
       <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <h2 class="section-title">거래 내역 (매매 일지)</h2>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-size:0.75rem; color:var(--text-sub);">종목 필터:</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-primary" id="btn-add-tx-direct" style="padding:6px 12px; font-size:0.75rem; font-weight:700;">+ 거래 기록 추가</button>
+          <span style="font-size:0.75rem; color:var(--text-sub);">종목:</span>
           <select id="tx-stock-filter-select" class="form-select" style="padding:4px 8px; font-size:0.78rem; font-weight:700;">
             <option value="ALL">전체 종목 보기</option>
             <!-- stock options dynamically populated by JS -->
