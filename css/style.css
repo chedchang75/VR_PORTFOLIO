@@ -124,13 +124,16 @@ body {
   font-weight: 500;
 }
 
-  font-size: 0.7rem;
-  background: rgba(99, 102, 241, 0.2);
+.exchange-rate-badge {
+  font-size: 0.72rem;
+  background: rgba(99, 102, 241, 0.15);
   color: #a5b4fc;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
 }
 
 .total-assets-val {

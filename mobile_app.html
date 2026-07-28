@@ -135,13 +135,16 @@ body {
   font-weight: 500;
 }
 
-  font-size: 0.7rem;
-  background: rgba(99, 102, 241, 0.2);
+.exchange-rate-badge {
+  font-size: 0.72rem;
+  background: rgba(99, 102, 241, 0.15);
   color: #a5b4fc;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 12px;
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
 }
 
 .total-assets-val {
@@ -798,7 +801,10 @@ body {
 
     <!-- Portfolio Summary Header Card (공통 자산 정보) -->
     <div class="glass-card summary-card">
-      <div class="summary-title">총 순자산 평가액 (KRW 기준)</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <div class="summary-title">총 순자산 평가액 (KRW 기준)</div>
+        <span class="exchange-rate-badge" id="current-exchange-rate-display">실시간 환율: $1 = ₩1,462.59</span>
+      </div>
       <div class="total-assets-val" id="total-assets-val">₩0</div>
       
       <!-- 통화별 분리 표시 컨테이너 (USD & KRW 자산) -->
@@ -1711,6 +1717,10 @@ body {
       const totalPoolKRW = (totalUSDPool * currentExchangeRate) + totalKRWPool;
       const totalNetAssetsKRW = totalEvaluationKRW + totalPoolKRW;
       const totalPnLKRW = totalEvaluationKRW - totalInvestmentKRW;
+      const rateDisplay = document.getElementById('current-exchange-rate-display');
+      if (rateDisplay) {
+        rateDisplay.textContent = `실시간 환율: $1 = ₩${currentExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+      }
       document.getElementById('total-assets-val').textContent = `₩${Math.round(totalNetAssetsKRW).toLocaleString()}`;
       
       const usdConvertedKRW = totalUSDAsset * currentExchangeRate;
