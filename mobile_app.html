@@ -2847,6 +2847,16 @@ function initSupabaseClient() {
       const btnExport = document.getElementById('btn-export-json');
       const btnImport = document.getElementById('btn-import-json');
       const fileInput = document.getElementById('import-json-file');
+      const btnCloudSync = document.getElementById('btn-cloud-sync');
+
+      if (btnCloudSync) {
+        btnCloudSync.onclick = async () => {
+          btnCloudSync.style.opacity = '0.5';
+          console.log('⚡ btn-cloud-sync clicked!');
+          await syncFromSupabase(true);
+          btnCloudSync.style.opacity = '1';
+        };
+      }
 
       if (btnExport) {
         btnExport.addEventListener('click', () => {
@@ -2894,7 +2904,7 @@ function initSupabaseClient() {
       }
     }
 
-        window.switchTab = function(tabName) {
+    window.switchTab = function(tabName) {
       const navItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
       if (navItem) navItem.click();
     };
