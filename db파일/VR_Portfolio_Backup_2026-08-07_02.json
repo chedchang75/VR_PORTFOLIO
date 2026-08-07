@@ -1,0 +1,291 @@
+{
+  "usdExchangeRate": 1439.43,
+  "stocks": [
+    {
+      "id": "stk_2",
+      "code": "005930",
+      "name": "삼성전자",
+      "currency": "KRW",
+      "currentPrice": 234000,
+      "targetBuyPrice": 70000,
+      "targetSellPrice": 82000,
+      "strategyType": "VR",
+      "cycleWeeks": 2,
+      "vrBandPercent": 10,
+      "G": 10,
+      "v1": 79285000,
+      "vrTargetValue": 5000000,
+      "holdings": 314,
+      "avgPrice": 249500,
+      "history": [
+        {
+          "week": 0,
+          "date": "26.7.13~7.26",
+          "price": 252500,
+          "g": 10,
+          "evalE": 79285000,
+          "targetV": 79285000,
+          "minBand": 71356500,
+          "maxBand": 87213500,
+          "poolDelta": 0,
+          "poolCumulative": 5000000,
+          "totalAsset": 84285000,
+          "profitPercent": 1.2,
+          "profitAmount": 942000,
+          "qty": 314,
+          "avgPrice": 249500
+        }
+      ],
+      "qtyStep": 2,
+      "buyGridState": {
+        "buy_1": {
+          "executed": true,
+          "date": "2026-07-28",
+          "actualPrice": 225750,
+          "actualQty": 2
+        }
+      },
+      "sellGridState": {},
+      "gridHistoryByWeek": {
+        "0": {
+          "buyGridState": {
+            "buy_1": {
+              "executed": true,
+              "date": "2026-07-28",
+              "actualPrice": 225750,
+              "actualQty": 2
+            }
+          },
+          "sellGridState": {}
+        }
+      }
+    },
+    {
+      "code": "423920",
+      "name": "TIGER반도체레버러지",
+      "currency": "KRW",
+      "currentPrice": 93530,
+      "targetBuyPrice": 93969,
+      "targetSellPrice": 114851.00000000001,
+      "strategyType": "VR",
+      "cycleWeeks": 2,
+      "vrBandPercent": 15,
+      "G": 10,
+      "qtyStep": 5,
+      "buyLimitPercent": 25,
+      "v1": 30278900,
+      "vrTargetValue": 13000000,
+      "holdings": 290,
+      "avgPrice": 104410,
+      "history": [
+        {
+          "week": 0,
+          "date": "26.7.13~7.26",
+          "price": 104410,
+          "g": 10,
+          "evalE": 30278900,
+          "targetV": 30278900,
+          "minBand": 25737065,
+          "maxBand": 34820735,
+          "poolDelta": 0,
+          "poolCumulative": 13000000,
+          "totalAsset": 43278900,
+          "profitPercent": 0,
+          "profitAmount": 0,
+          "qty": 290,
+          "avgPrice": 104410
+        }
+      ],
+      "id": "stk_1784983259776",
+      "buyGridState": {
+        "buy_1": {
+          "executed": true,
+          "date": "2026-07-31",
+          "actualPrice": 80540,
+          "actualQty": 30
+        },
+        "buy_2": {
+          "executed": false,
+          "date": "2026-07-31",
+          "actualPrice": 84670,
+          "actualQty": 20
+        }
+      },
+      "gridHistoryByWeek": {
+        "0": {
+          "buyGridState": {
+            "buy_1": {
+              "executed": true,
+              "date": "2026-07-31",
+              "actualPrice": 80540,
+              "actualQty": 30
+            },
+            "buy_2": {
+              "executed": false,
+              "date": "2026-07-31",
+              "actualPrice": 84670,
+              "actualQty": 20
+            }
+          },
+          "sellGridState": {}
+        }
+      },
+      "sellGridState": {}
+    },
+    {
+      "code": "122630",
+      "name": "KODEX200레버러지",
+      "currency": "KRW",
+      "currentPrice": 90690,
+      "targetBuyPrice": 102051,
+      "targetSellPrice": 124729.00000000001,
+      "strategyType": "VR",
+      "cycleWeeks": 2,
+      "vrBandPercent": 10,
+      "G": 10,
+      "qtyStep": 5,
+      "buyLimitPercent": 25,
+      "v1": 29821570,
+      "vrTargetValue": 3000000,
+      "holdings": 263,
+      "avgPrice": 113390,
+      "history": [
+        {
+          "week": 0,
+          "date": "26.7.13~7.26",
+          "price": 113390,
+          "g": 15,
+          "evalE": 29821570,
+          "targetV": 29821570,
+          "minBand": 25348334.5,
+          "maxBand": 34294805.5,
+          "poolDelta": 0,
+          "poolCumulative": 3000000,
+          "totalAsset": 29821570,
+          "profitPercent": 0,
+          "profitAmount": 0,
+          "qty": 263,
+          "avgPrice": 113390
+        }
+      ],
+      "id": "stk_1784984477141"
+    },
+    {
+      "code": "000660",
+      "name": "하이닉스",
+      "currency": "KRW",
+      "currentPrice": 1426000,
+      "targetBuyPrice": 1583100,
+      "targetSellPrice": 1934900.0000000002,
+      "strategyType": "VR",
+      "cycleWeeks": 2,
+      "vrBandPercent": 20,
+      "G": 15,
+      "qtyStep": 1,
+      "buyLimitPercent": 25,
+      "v1": 46306000,
+      "vrTargetValue": 10000000,
+      "holdings": 26,
+      "avgPrice": 1759000,
+      "history": [
+        {
+          "week": 0,
+          "date": "26.7.13~7.26",
+          "price": 1781000,
+          "g": 15,
+          "evalE": 46306000,
+          "targetV": 46306000,
+          "minBand": 39360100,
+          "maxBand": 53251900,
+          "poolDelta": 0,
+          "poolCumulative": 10000000,
+          "totalAsset": 46306000,
+          "profitPercent": 0,
+          "profitAmount": 0,
+          "qty": 26,
+          "avgPrice": 1759000
+        }
+      ],
+      "id": "stk_1784984793701",
+      "buyGridState": {
+        "buy_1": {
+          "executed": true,
+          "date": "2026-07-29",
+          "actualPrice": 1408000,
+          "actualQty": 1
+        }
+      },
+      "gridHistoryByWeek": {
+        "0": {
+          "buyGridState": {
+            "buy_1": {
+              "executed": true,
+              "date": "2026-07-29",
+              "actualPrice": 1408000,
+              "actualQty": 1
+            }
+          },
+          "sellGridState": {}
+        }
+      }
+    },
+    {
+      "code": "TQQQ",
+      "name": "ULTRA TQQQ",
+      "currency": "USD",
+      "currentPrice": 72.03,
+      "avgPrice": 61.93,
+      "holdings": 7796,
+      "strategyType": "VR",
+      "cycleWeeks": 2,
+      "vrBandPercent": 15,
+      "G": 15,
+      "qtyStep": 20,
+      "vrTargetValue": 101138.97,
+      "history": [
+        {
+          "week": 0,
+          "date": "26.7.20~8.2",
+          "price": 61.93,
+          "g": 15,
+          "evalE": 482806.28,
+          "targetV": 482806.28,
+          "minBand": 410385.34,
+          "maxBand": 555227.22,
+          "poolDelta": 0,
+          "poolCumulative": 101138.97,
+          "totalAsset": 583945.25,
+          "profitPercent": 0,
+          "profitAmount": 0,
+          "qty": 7796,
+          "avgPrice": 61.93
+        }
+      ],
+      "id": "stk_1786082028181",
+      "v1": 482806.28,
+      "buyGridState": {},
+      "sellGridState": {
+        "sell_1": {
+          "executed": true,
+          "date": "2026-08-04",
+          "actualPrice": 75.14,
+          "actualQty": 120
+        }
+      },
+      "gridHistoryByWeek": {
+        "0": {
+          "buyGridState": {},
+          "sellGridState": {
+            "sell_1": {
+              "executed": true,
+              "date": "2026-08-04",
+              "actualPrice": 75.14,
+              "actualQty": 120
+            }
+          }
+        }
+      }
+    }
+  ],
+  "transactions": []
+}
