@@ -3388,13 +3388,13 @@ body {
                 <span>🗓️ 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> (${schedule.periodText})</span>
                 <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:1px 5px; border-radius:4px; font-size:0.68rem; flex-shrink:0;">${schedule.dDayBadge}</span>
               </div>
-              ${tradeSummaryHtml}
               <div class="signal-status-bar" style="margin-top:4px;">
                 <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
                 ${signalBadge}
               </div>
             </div>
           </div>
+          ${tradeSummaryHtml}
         `;
 
         const btnDelete = card.querySelector('.btn-delete-stock-card');
