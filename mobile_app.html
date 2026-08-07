@@ -2394,9 +2394,9 @@ body {
     class PriceFetcher {
       async fetchUSDExchangeRate() {
         try {
-          const response = await fetch('https://open.er-api.com/v6/latest/USD');
-          if (response.ok) {
-            const data = await response.json();
+          const res = await fetch('https://open.er-api.com/v6/latest/USD');
+          if (res.ok) {
+            const data = await res.json();
             if (data && data.rates && data.rates.KRW) {
               return parseFloat(data.rates.KRW.toFixed(2));
             }
@@ -2406,8 +2406,63 @@ body {
       }
 
       async fetchPrice(code) {
-        if (/^\d{6}$/.test(code)) return 249500;
-        if (code === 'TQQQ') return 64.00;
+        if (!code) return null;
+        const cleanCode = String(code).trim().toUpperCase();
+
+        // 1. Domestic KRX stock (6 digits e.g. 005930, 000660, 122630)
+        if (/^\d{6}$/.test(cleanCode)) {
+          try {
+            const res = await fetch(`https://m.stock.naver.com/api/stock/${cleanCode}/basic`, {
+              headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            if (res.ok) {
+              const json = await res.json();
+              if (json && json.closePrice) {
+                const val = parseFloat(String(json.closePrice).replace(/,/g, ''));
+                if (!isNaN(val) && val > 0) return val;
+              }
+            }
+          } catch (e) {}
+
+          try {
+            const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KS?interval=1d`, {
+              headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            if (res.ok) {
+              const json = await res.json();
+              const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
+              if (price && !isNaN(price) && price > 0) return price;
+            }
+          } catch (e) {}
+        }
+
+        // 2. Overseas US Stock (e.g. TQQQ, QQQ, AAPL, NVDA)
+        try {
+          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+          });
+          if (res.ok) {
+            const json = await res.json();
+            const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
+            if (price && !isNaN(price) && price > 0) return price;
+          }
+        } catch (e) {}
+
+        // 3. Fallback AllOrigins Proxy for US Stocks
+        try {
+          const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`;
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+          const res = await fetch(proxyUrl);
+          if (res.ok) {
+            const json = await res.json();
+            if (json && json.contents) {
+              const chartData = JSON.parse(json.contents);
+              const price = chartData.chart?.result?.[0]?.meta?.regularMarketPrice;
+              if (price && !isNaN(price) && price > 0) return price;
+            }
+          }
+        } catch (e) {}
+
         return null;
       }
 
@@ -2627,6 +2682,7 @@ body {
       }
     }
 
+    window.refreshRealtimePrices = refreshRealtimePrices;
     async function refreshRealtimePrices() {
       const btnRefresh = document.getElementById('btn-refresh-prices');
       if (btnRefresh) {
