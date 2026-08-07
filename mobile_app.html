@@ -2898,6 +2898,9 @@ body {
           }
         });
 
+        const buyAvgPrice = buyQty > 0 ? (buyTotal / buyQty) : 0;
+        const sellAvgPrice = sellQty > 0 ? (sellTotal / sellQty) : 0;
+
         const hasActiveTrades = (buyCount > 0 || sellCount > 0);
         const tradeSummaryHtml = hasActiveTrades ? `
           <div class="stock-card-trades-summary" style="margin-top:8px; padding:8px 12px; background:rgba(16, 185, 129, 0.08); border-radius:8px; border:1px solid rgba(16, 185, 129, 0.25); font-size:0.75rem;">
@@ -2908,13 +2911,13 @@ body {
             ${buyCount > 0 ? `
               <div style="display:flex; justify-content:space-between; align-items:center; color:#93c5fd; font-size:0.73rem; margin-top:2px;">
                 <span>📥 매수 체결 (${buyCount}건):</span>
-                <strong>+${buyQty.toLocaleString()}주 (${formatCurrency(buyTotal, stock.currency)})</strong>
+                <span><strong>+${buyQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(buyAvgPrice, stock.currency)}</strong> (${formatCurrency(buyTotal, stock.currency)})</span>
               </div>
             ` : ''}
             ${sellCount > 0 ? `
               <div style="display:flex; justify-content:space-between; align-items:center; color:#fca5a5; font-size:0.73rem; margin-top:2px;">
                 <span>📤 매도 체결 (${sellCount}건):</span>
-                <strong>-${sellQty.toLocaleString()}주 (${formatCurrency(sellTotal, stock.currency)})</strong>
+                <span><strong>-${sellQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sellAvgPrice, stock.currency)}</strong> (${formatCurrency(sellTotal, stock.currency)})</span>
               </div>
             ` : ''}
           </div>
