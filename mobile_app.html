@@ -2097,20 +2097,20 @@ body {
           code: '122630',
           name: 'KODEX 200레버리지',
           currency: 'KRW',
-          currentPrice: 90725,
-          targetBuyPrice: 42000,
-          targetSellPrice: 49000,
+          currentPrice: 90690,
+          targetBuyPrice: 95997,
+          targetSellPrice: 129878,
           strategyType: 'VR',
           cycleWeeks: 2,
           vrBandPercent: 15,
           G: 15,
           qtyStep: 50,
-          v1: 22500000,
+          v1: 30501910,
           vrTargetValue: 10000000,
-          holdings: 500,
-          avgPrice: 43000,
+          holdings: 269,
+          avgPrice: 113390,
           history: [
-            { week: 0, date: '25.1.25~2.7', price: 43000, g: 15, evalE: 21500000, targetV: 21500000, minBand: 18275000, maxBand: 24725000, poolDelta: 0, poolCumulative: 10000000, totalAsset: 21500000, profitPercent: 0.0, profitAmount: 0, qty: 500, avgPrice: 43000 }
+            { week: 0, date: '25.1.25~2.7', price: 113390, g: 15, evalE: 30501910, targetV: 30501910, minBand: 25926623, maxBand: 35077196, poolDelta: 0, poolCumulative: 10000000, totalAsset: 30501910, profitPercent: 0.0, profitAmount: 0, qty: 269, avgPrice: 113390 }
           ]
         }
       ],
@@ -2125,6 +2125,7 @@ body {
     const SUPABASE_URL = 'https://mpfvbabwzejhjljgicor.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_VkVYKr9xgzdHge-GsMZrig_OR671JXg';
     var isSupabaseSyncing = false;
+    var isCloudSyncInitialized = false;
     class Store {
       constructor() {
         this.data = this.loadData();
@@ -2158,6 +2159,13 @@ body {
         this.archiveDB = this.loadArchiveDB();
 
         this.data.stocks.forEach(s => {
+          if (s.holdings > 0 && s.avgPrice > 0) {
+            const calculatedV1 = Math.round(s.holdings * s.avgPrice * 100) / 100;
+            if (!s.v1 || s.v1 < calculatedV1 * 0.7) {
+              s.v1 = calculatedV1;
+              needsSave = true;
+            }
+          }
           // Keep currentPrice pure: NEVER fallback to avgPrice
           if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
             s.currentPrice = 72.03;
@@ -2230,7 +2238,7 @@ body {
 
       saveData(data = this.data, syncToCloud = true) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        if (syncToCloud && typeof syncToSupabase === 'function') {
+        if (syncToCloud && isCloudSyncInitialized && typeof syncToSupabase === 'function') {
           syncToSupabase(data, false);
         }
       }
@@ -2805,11 +2813,14 @@ body {
     // Unconditional Automatic Cloud Pull whenever accessing app or clicking sync
     async function syncFromSupabase(isManual = false) {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/vr_portfolio?id=eq.user_portfolio&select=*`, {
+        const cacheBustUrl = `${SUPABASE_URL}/rest/v1/vr_portfolio?id=eq.user_portfolio&select=*&t=${Date.now()}`;
+        const res = await fetch(cacheBustUrl, {
           method: 'GET',
           headers: {
             'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
           }
         });
 
@@ -2823,6 +2834,7 @@ body {
           const cloudData = rows[0].data;
           appStore.data = cloudData;
           appStore.saveData(appStore.data, false);
+          isCloudSyncInitialized = true;
           renderDashboard();
           renderTransactions();
           renderStrategies();
@@ -2835,6 +2847,7 @@ body {
           // Cloud DB empty -> populate server with initial data
           console.log('Cloud DB empty. Populating Supabase server with initial data...');
           await syncToSupabase(appStore.data, false);
+          isCloudSyncInitialized = true;
           if (isManual) {
             alert('⚡ Supabase 클라우드 서버에 기존 데이터가 없어, 현재 데이터가 최초 자동 등록되었습니다.');
           }
@@ -3194,10 +3207,34 @@ body {
             <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.7rem; flex-shrink:0;">${schedule.dDayBadge}</span>
           </div>
           ${tradeSummaryHtml}
-          <div class="signal-status-bar" style="margin-top:6px;">
-            <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
-            <span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>
-          </div>
+          ${(() => {
+            const vrEval = vrEngine.evaluate({
+              currentPrice: basePrice,
+              holdingItem: { qty: baseQty, avgPrice: stock.avgPrice, evaluationAmount: evalCurrency },
+              strategyParams: {
+                v1: stock.v1 || (baseQty * (stock.avgPrice || basePrice)),
+                pool: stock.vrTargetValue || 10000000,
+                G: stock.G || 15,
+                deposit: 0,
+                bandPercent: stock.vrBandPercent || 15,
+                cycleWeeks: stock.cycleWeeks || 2,
+                qtyStep: stock.qtyStep || 20,
+                buyLimitPercent: 25
+              }
+            });
+
+            let signalBadge = '<span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>';
+            if (vrEval.signalType === 'BUY') {
+              signalBadge = `<span class="signal-indicator" style="color:#34d399; font-weight:700;"><span class="signal-dot dot-buy" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span> 🛒 1차 매수 타이밍 (${vrEval.targetQty}주 권장)</span>`;
+            } else if (vrEval.signalType === 'SELL') {
+              signalBadge = `<span class="signal-indicator" style="color:#f87171; font-weight:700;"><span class="signal-dot dot-sell" style="background:#ef4444; box-shadow:0 0 8px #ef4444;"></span> 📤 1차 매도 타이밍 (${vrEval.targetQty}주 권장)</span>`;
+            }
+
+            return `<div class="signal-status-bar" style="margin-top:6px;">
+              <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
+              ${signalBadge}
+            </div>`;
+          })()}
         `;
 
         const btnDelete = card.querySelector('.btn-delete-stock-card');
