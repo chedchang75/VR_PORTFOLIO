@@ -791,7 +791,7 @@ body {
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btn-github-link" title="GitHub 저장소 바로가기 (chedchang75/VR_PORTFOLIO)" onclick="window.open('https://github.com/chedchang75/VR_PORTFOLIO', '_blank')">🐙</button>
-        <button class="icon-btn" id="btn-github-sync" title="GitHub 저장소 데이터 최신 동기화">☁️</button>
+        
         <button class="icon-btn" id="btn-export-json" title="PC/모바일 데이터 백업 (내보내기)">📤</button>
         <button class="icon-btn" id="btn-import-json" title="PC/모바일 데이터 복원 (불러오기)">📥</button>
         <input type="file" id="import-json-file" accept=".json" style="display:none;">
@@ -2648,34 +2648,7 @@ body {
     function bindBackupEvents() {
       const btnExport = document.getElementById('btn-export-json');
       const btnImport = document.getElementById('btn-import-json');
-      const btnGithubSync = document.getElementById('btn-github-sync');
       const fileInput = document.getElementById('import-json-file');
-
-      if (btnGithubSync) {
-        btnGithubSync.addEventListener('click', async () => {
-          if (confirm('☁️ GitHub 저장소 (chedchang75/VR_PORTFOLIO)의 최신 데이터로 동기화하시겠습니까?')) {
-            const rawBackupUrl = 'https://raw.githubusercontent.com/chedchang75/VR_PORTFOLIO/main/db%ED%8C%8C%EC%9D%BC/VR_Portfolio_Backup_2026-07-25.json';
-            try {
-              const res = await fetch(`${rawBackupUrl}?cacheBust=${Date.now()}`);
-              if (res.ok) {
-                const remoteData = await res.json();
-                if (remoteData && remoteData.stocks) {
-                  appStore.data = remoteData;
-                  appStore.saveData();
-                  alert('☁️ GitHub 저장소 데이터와 성공적으로 동기화되었습니다.');
-                  renderDashboard();
-                  renderTransactions();
-                  renderStrategies();
-                  return;
-                }
-              }
-            } catch (e) {
-              console.error('GitHub fetch failed:', e);
-            }
-            alert('❌ GitHub 저장소 데이터를 불러오는데 실패했습니다.');
-          }
-        });
-      }
 
       if (btnExport) {
         btnExport.addEventListener('click', () => {
