@@ -793,6 +793,7 @@ body {
       <div class="header-actions">
         <button class="icon-btn" id="btn-github-link" title="GitHub 저장소 바로가기 (chedchang75/VR_PORTFOLIO)" onclick="window.open('https://github.com/chedchang75/VR_PORTFOLIO', '_blank')">🐙</button>
         
+        <button class="icon-btn" id="btn-cloud-save" title="Supabase 클라우드 서버에 데이터 저장하기" style="background: rgba(99, 102, 241, 0.25); border: 1px solid rgba(99, 102, 241, 0.5);">💾</button>
         <button class="icon-btn" id="btn-cloud-sync" title="Supabase 실시간 클라우드 동기화 (PC/모바일 연동)" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4);">⚡</button>
         <button class="icon-btn" id="btn-export-json" title="PC/모바일 데이터 백업 (내보내기)">📤</button>
         <button class="icon-btn" id="btn-import-json" title="PC/모바일 데이터 복원 (불러오기)">📥</button>
@@ -2785,7 +2786,7 @@ body {
         if (res.ok) {
           console.log('⚡ Supabase REST AUTO-PUSH SUCCESS!');
           if (isManual) {
-            alert('⚡ 현재 포트폴리오 데이터가 Supabase 클라우드 서버에 안전하게 자동 저장되었습니다!');
+            alert('💾 현재 포트폴리오 데이터가 Supabase 클라우드 서버에 성공적으로 저장(업로드)되었습니다!\n\n다른 기기(모바일/PC)에서 접속 시 이 데이터가 불러와집니다.');
           }
           return true;
         } else {
@@ -2871,10 +2872,21 @@ body {
       const btnImport = document.getElementById('btn-import-json');
       const fileInput = document.getElementById('import-json-file');
       const btnCloudSync = document.getElementById('btn-cloud-sync');
+      const btnCloudSave = document.getElementById('btn-cloud-save');
+
+      if (btnCloudSave) {
+        btnCloudSave.onclick = async () => {
+          btnCloudSave.style.opacity = '0.5';
+          console.log('💾 btn-cloud-save clicked!');
+          await syncToSupabase(appStore.data, true);
+          btnCloudSave.style.opacity = '1';
+        };
+      }
 
       if (btnCloudSync) {
         btnCloudSync.onclick = async () => {
           btnCloudSync.style.opacity = '0.5';
+          console.log('⚡ btn-cloud-sync clicked!');
           await handleCloudSyncButtonClick();
           btnCloudSync.style.opacity = '1';
         };
