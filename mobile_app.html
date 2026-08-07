@@ -3175,66 +3175,111 @@ body {
 
         const card = document.createElement('div');
         card.className = 'glass-card stock-card';
+        
+        // Calculate VR Strategy metrics & band position
+        const vrEval = vrEngine.evaluate({
+          currentPrice: basePrice,
+          holdingItem: { qty: baseQty, avgPrice: stock.avgPrice, evaluationAmount: evalCurrency },
+          strategyParams: {
+            v1: stock.v1 || (baseQty * (stock.avgPrice || basePrice)),
+            pool: stock.vrTargetValue || 10000000,
+            G: stock.G || 15,
+            deposit: 0,
+            bandPercent: stock.vrBandPercent || 15,
+            cycleWeeks: stock.cycleWeeks || 2,
+            qtyStep: stock.qtyStep || 20,
+            buyLimitPercent: 25
+          }
+        });
+
+        const buyTrigger = vrEval.firstBuyTrigger;
+        const sellTrigger = vrEval.firstSellTrigger;
+        let posPercent = 50;
+        if (sellTrigger > buyTrigger) {
+          posPercent = Math.max(0, Math.min(100, ((basePrice - buyTrigger) / (sellTrigger - buyTrigger)) * 100));
+        }
+
+        let pinColor = '#6366f1';
+        let bandStatusText = '밴드 안전권';
+        let signalBadge = '<span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>';
+
+        if (vrEval.signalType === 'BUY') {
+          pinColor = '#10b981';
+          bandStatusText = '🛒 매수 구간';
+          signalBadge = `<span class="signal-indicator" style="color:#34d399; font-weight:700;"><span class="signal-dot dot-buy" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span> 🛒 1차 매수 타이밍 (${vrEval.targetQty}주 권장)</span>`;
+        } else if (vrEval.signalType === 'SELL') {
+          pinColor = '#ef4444';
+          bandStatusText = '📤 매도 구간';
+          signalBadge = `<span class="signal-indicator" style="color:#f87171; font-weight:700;"><span class="signal-dot dot-sell" style="background:#ef4444; box-shadow:0 0 8px #ef4444;"></span> 📤 1차 매도 타이밍 (${vrEval.targetQty}주 권장)</span>`;
+        }
+
         card.innerHTML = `
-          <div class="stock-card-top">
-            <div class="stock-name-group">
-              <span class="stock-name">${stock.name}</span>
-              <span class="stock-code">${stock.code} · ${stock.currency}</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="stock-badge ${pnlKRW >= 0 ? 'badge-up' : 'badge-down'}">
-                ${pnlKRW >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
-              </span>
-              <button class="btn-secondary btn-delete-stock-card" style="padding:4px 8px; font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:#ef4444; color:#f87171; font-weight:700; white-space:nowrap; flex-shrink:0;">🗑️ 삭제</button>
-            </div>
-          </div>
-          <div class="stock-card-details">
-            <div class="stock-detail-item">
-              <span class="stock-detail-label">현재가 (실시간)</span>
-              <span class="stock-detail-val" id="stock-card-price-${stock.id}">${formatCurrency(basePrice, stock.currency)}</span>
-            </div>
-            <div class="stock-detail-item">
-              <span class="stock-detail-label">평단가</span>
-              <span class="stock-detail-val">${formatCurrency(stock.avgPrice, stock.currency)}</span>
-            </div>
-            <div class="stock-detail-item">
-              <span class="stock-detail-label">보유수량</span>
-              <span class="stock-detail-val">${baseQty.toLocaleString()}주</span>
-            </div>
-          </div>
-          <div class="stock-card-schedule" style="margin-top:8px; padding:6px 10px; background:rgba(99,102,241,0.12); border-radius:8px; border:1px solid rgba(99,102,241,0.25); font-size:0.75rem; color:#c7d2fe; display:flex; justify-content:space-between; align-items:center;">
-            <span>🗓️ 현재 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> 기간: <strong style="color:#ffffff;">${schedule.periodText}</strong></span>
-            <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.7rem; flex-shrink:0;">${schedule.dDayBadge}</span>
-          </div>
-          ${tradeSummaryHtml}
-          ${(() => {
-            const vrEval = vrEngine.evaluate({
-              currentPrice: basePrice,
-              holdingItem: { qty: baseQty, avgPrice: stock.avgPrice, evaluationAmount: evalCurrency },
-              strategyParams: {
-                v1: stock.v1 || (baseQty * (stock.avgPrice || basePrice)),
-                pool: stock.vrTargetValue || 10000000,
-                G: stock.G || 15,
-                deposit: 0,
-                bandPercent: stock.vrBandPercent || 15,
-                cycleWeeks: stock.cycleWeeks || 2,
-                qtyStep: stock.qtyStep || 20,
-                buyLimitPercent: 25
-              }
-            });
+          <div style="display:flex; gap:10px; align-items:stretch;">
+            <!-- Left Side: VR Progress Thumbnail Widget -->
+            <div class="vr-thumbnail-box" style="width:96px; flex-shrink:0; background:rgba(15,23,42,0.65); border:1px solid rgba(99,102,241,0.3); border-radius:10px; padding:8px 6px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; text-align:center;">
+              <div style="font-size:0.68rem; font-weight:700; color:#818cf8; letter-spacing:-0.2px;">📊 VR 진행 썸네일</div>
+              
+              <!-- Band Position Meter -->
+              <div style="width:100%; margin:4px 0;">
+                <div style="font-size:0.62rem; color:#94a3b8; display:flex; justify-content:space-between; margin-bottom:2px; font-weight:600;">
+                  <span style="color:#10b981;">매수</span>
+                  <span style="color:#ef4444;">매도</span>
+                </div>
+                <div style="position:relative; width:100%; height:8px; background:linear-gradient(to right, #10b981 0%, #6366f1 50%, #ef4444 100%); border-radius:4px;">
+                  <div style="position:absolute; top:-3px; left:${posPercent.toFixed(1)}%; transform:translateX(-50%); width:14px; height:14px; background:#ffffff; border:2.5px solid ${pinColor}; border-radius:50%; box-shadow:0 0 8px ${pinColor}; transition:left 0.3s ease;"></div>
+                </div>
+                <div style="font-size:0.63rem; color:${pinColor}; margin-top:5px; font-weight:800;">
+                  ${bandStatusText} (${posPercent.toFixed(0)}%)
+                </div>
+              </div>
 
-            let signalBadge = '<span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>';
-            if (vrEval.signalType === 'BUY') {
-              signalBadge = `<span class="signal-indicator" style="color:#34d399; font-weight:700;"><span class="signal-dot dot-buy" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span> 🛒 1차 매수 타이밍 (${vrEval.targetQty}주 권장)</span>`;
-            } else if (vrEval.signalType === 'SELL') {
-              signalBadge = `<span class="signal-indicator" style="color:#f87171; font-weight:700;"><span class="signal-dot dot-sell" style="background:#ef4444; box-shadow:0 0 8px #ef4444;"></span> 📤 1차 매도 타이밍 (${vrEval.targetQty}주 권장)</span>`;
-            }
+              <!-- Price Targets -->
+              <div style="font-size:0.62rem; color:#94a3b8; border-top:1px dashed rgba(255,255,255,0.12); width:100%; padding-top:4px; line-height:1.3;">
+                <div style="color:#94a3b8; font-size:0.6rem;">1차 매수/매도가</div>
+                <span style="color:#10b981; font-weight:700;">${formatCurrency(buyTrigger, stock.currency)}</span><br>
+                <span style="color:#f87171; font-weight:700;">${formatCurrency(sellTrigger, stock.currency)}</span>
+              </div>
+            </div>
 
-            return `<div class="signal-status-bar" style="margin-top:6px;">
-              <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
-              ${signalBadge}
-            </div>`;
-          })()}
+            <!-- Right Side: Stock Main Content -->
+            <div style="flex:1; min-width:0;">
+              <div class="stock-card-top">
+                <div class="stock-name-group">
+                  <span class="stock-name">${stock.name}</span>
+                  <span class="stock-code">${stock.code} · ${stock.currency}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="stock-badge ${pnlKRW >= 0 ? 'badge-up' : 'badge-down'}">
+                    ${pnlKRW >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
+                  </span>
+                  <button class="btn-secondary btn-delete-stock-card" style="padding:4px 8px; font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:#ef4444; color:#f87171; font-weight:700; white-space:nowrap; flex-shrink:0;">🗑️ 삭제</button>
+                </div>
+              </div>
+              <div class="stock-card-details">
+                <div class="stock-detail-item">
+                  <span class="stock-detail-label">현재가 (실시간)</span>
+                  <span class="stock-detail-val" id="stock-card-price-${stock.id}">${formatCurrency(basePrice, stock.currency)}</span>
+                </div>
+                <div class="stock-detail-item">
+                  <span class="stock-detail-label">평단가</span>
+                  <span class="stock-detail-val">${formatCurrency(stock.avgPrice, stock.currency)}</span>
+                </div>
+                <div class="stock-detail-item">
+                  <span class="stock-detail-label">보유수량</span>
+                  <span class="stock-detail-val">${baseQty.toLocaleString()}주</span>
+                </div>
+              </div>
+              <div class="stock-card-schedule" style="margin-top:6px; padding:4px 8px; background:rgba(99,102,241,0.12); border-radius:6px; border:1px solid rgba(99,102,241,0.25); font-size:0.72rem; color:#c7d2fe; display:flex; justify-content:space-between; align-items:center;">
+                <span>🗓️ 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> (${schedule.periodText})</span>
+                <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:1px 5px; border-radius:4px; font-size:0.68rem; flex-shrink:0;">${schedule.dDayBadge}</span>
+              </div>
+              ${tradeSummaryHtml}
+              <div class="signal-status-bar" style="margin-top:4px;">
+                <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
+                ${signalBadge}
+              </div>
+            </div>
+          </div>
         `;
 
         const btnDelete = card.querySelector('.btn-delete-stock-card');
