@@ -3279,15 +3279,15 @@ body {
               <span style="background:rgba(52,211,153,0.2); color:#34d399; font-weight:700; padding:2px 8px; border-radius:4px; font-size:0.7rem;">총 ${buyCount + sellCount}건 체결 완료</span>
             </div>
             ${buyCount > 0 ? `
-              <div style="display:flex; justify-content:space-between; align-items:center; color:#93c5fd; font-size:0.73rem; margin-top:2px;">
-                <span>📥 매수 체결 (${buyCount}건):</span>
-                <span><strong>+${buyQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(buyAvgPrice, stock.currency)}</strong> (${formatCurrency(buyTotal, stock.currency)})</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#93c5fd; font-size:0.71rem; margin-top:2px; white-space:nowrap; gap:6px; flex-wrap:nowrap; overflow:hidden;">
+                <span style="white-space:nowrap; flex-shrink:0;">📥 매수 체결 (${buyCount}건):</span>
+                <span style="white-space:nowrap; text-align:right; flex-shrink:0;"><strong>+${buyQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(buyAvgPrice, stock.currency)}</strong> (${formatCurrency(buyTotal, stock.currency)})</span>
               </div>
             ` : ''}
             ${sellCount > 0 ? `
-              <div style="display:flex; justify-content:space-between; align-items:center; color:#fca5a5; font-size:0.73rem; margin-top:2px;">
-                <span>📤 매도 체결 (${sellCount}건):</span>
-                <span><strong>-${sellQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sellAvgPrice, stock.currency)}</strong> (${formatCurrency(sellTotal, stock.currency)})</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#fca5a5; font-size:0.71rem; margin-top:2px; white-space:nowrap; gap:6px; flex-wrap:nowrap; overflow:hidden;">
+                <span style="white-space:nowrap; flex-shrink:0;">📤 매도 체결 (${sellCount}건):</span>
+                <span style="white-space:nowrap; text-align:right; flex-shrink:0;"><strong>-${sellQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sellAvgPrice, stock.currency)}</strong> (${formatCurrency(sellTotal, stock.currency)})</span>
               </div>
             ` : ''}
           </div>
@@ -3334,19 +3334,17 @@ body {
         }
 
         card.innerHTML = `
-          <div style="display:flex; gap:10px; align-items:stretch;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
             <!-- Left Side: VR Progress Mini Chart Thumbnail (User Specified Design) -->
-            <div class="vr-thumbnail-box" style="width:130px; flex-shrink:0; background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:6px 5px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; text-align:center;">
+            <div class="vr-thumbnail-box" style="width:132px; flex-shrink:0; background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:6px 5px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; text-align:center;">
               <div style="font-size:0.65rem; font-weight:700; color:#c7d2fe; display:flex; gap:4px; justify-content:center; align-items:center;">
                 <span>📈 VR 진행 차트</span>
               </div>
               
-              <!-- Mini Legend -->
-              <div style="font-size:0.55rem; color:#94a3b8; display:flex; flex-wrap:wrap; justify-content:center; gap:3px; margin:2px 0;">
-                <span style="color:#818cf8;">■V(목표)</span>
-                <span style="color:#34d399;">■E(평가)</span>
-                <span style="color:#38bdf8;">--최소</span>
-                <span style="color:#f87171;">--최대</span>
+              <!-- 1차 매수/매도 기준가격 안내 -->
+              <div style="font-size:0.58rem; color:#94a3b8; display:flex; flex-direction:column; gap:1px; margin:2px 0; width:100%; font-weight:700; white-space:nowrap; background:rgba(0,0,0,0.25); padding:2px 4px; border-radius:4px;">
+                <div style="display:flex; justify-content:space-between;"><span style="color:#94a3b8;">매수가:</span><span style="color:#10b981;">${formatCurrency(buyTrigger, stock.currency)}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span style="color:#94a3b8;">매도가:</span><span style="color:#f87171;">${formatCurrency(sellTrigger, stock.currency)}</span></div>
               </div>
 
               <!-- Sparkline Canvas -->
