@@ -2227,6 +2227,95 @@ body {
       }
 
       getStocks() { return this.data.stocks || []; }
+      syncGridExecutionsToTransactions() {
+        if (!this.data || !this.data.stocks) return;
+        if (!this.data.transactions) this.data.transactions = [];
+
+        let modified = false;
+
+        this.data.stocks.forEach(stock => {
+          // Sync Buy Grid Executions
+          const buyState = stock.buyGridState || {};
+          Object.keys(buyState).forEach(rowKey => {
+            const st = buyState[rowKey];
+            const txId = `tx_grid_${stock.id}_${rowKey}`;
+            const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
+
+            if (st && st.executed) {
+              const qty = Number(st.actualQty || st.orderQty || 0);
+              const price = Number(st.actualPrice || st.price || 0);
+              const date = st.date || new Date().toISOString().split('T')[0];
+
+              if (qty > 0 && price > 0) {
+                if (existingIdx !== -1) {
+                  this.data.transactions[existingIdx].date = date;
+                  this.data.transactions[existingIdx].quantity = qty;
+                  this.data.transactions[existingIdx].price = price;
+                } else {
+                  this.data.transactions.push({
+                    id: txId,
+                    stockId: stock.id,
+                    date,
+                    type: 'BUY',
+                    quantity: qty,
+                    price,
+                    fee: 0
+                  });
+                }
+                modified = true;
+              }
+            } else if (existingIdx !== -1) {
+              this.data.transactions.splice(existingIdx, 1);
+              modified = true;
+            }
+          });
+
+          // Sync Sell Grid Executions
+          const sellState = stock.sellGridState || {};
+          Object.keys(sellState).forEach(rowKey => {
+            const st = sellState[rowKey];
+            const txId = `tx_grid_${stock.id}_${rowKey}`;
+            const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
+
+            if (st && st.executed) {
+              const qty = Number(st.actualQty || st.orderQty || 0);
+              const price = Number(st.actualPrice || st.price || 0);
+              const date = st.date || new Date().toISOString().split('T')[0];
+
+              if (qty > 0 && price > 0) {
+                if (existingIdx !== -1) {
+                  this.data.transactions[existingIdx].date = date;
+                  this.data.transactions[existingIdx].quantity = qty;
+                  this.data.transactions[existingIdx].price = price;
+                } else {
+                  this.data.transactions.push({
+                    id: txId,
+                    stockId: stock.id,
+                    date,
+                    type: 'SELL',
+                    quantity: qty,
+                    price,
+                    fee: 0
+                  });
+                }
+                modified = true;
+              }
+            } else if (existingIdx !== -1) {
+              this.data.transactions.splice(existingIdx, 1);
+              modified = true;
+            }
+          });
+        });
+
+        if (modified) {
+          this.saveData();
+          if (this.archiveDB) {
+            this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
+            this.saveArchiveDB();
+          }
+        }
+      }
+
       getTransactions() { return this.data.transactions || []; }
       
       setInitial0WeekHistory(stockId, { startDate, qty, pool, closePrice, userTargetV }) {
@@ -2705,6 +2794,11 @@ body {
         });
       }
     }
+
+        window.switchTab = function(tabName) {
+      const navItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+      if (navItem) navItem.click();
+    };
 
     function bindNavigation() {
       const navItems = document.querySelectorAll('.nav-item');
@@ -3606,6 +3700,7 @@ body {
       renderDashboard();
     }
 
+    window.renderTransactions = renderTransactions;
     function renderTransactions(filterStockId = 'ALL') {
       const txs = appStore.getTransactions();
       const stocks = appStore.getStocks();
