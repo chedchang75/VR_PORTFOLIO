@@ -2147,7 +2147,7 @@ body {
         if (!this.data || !this.data.stocks) return;
         this.data.stocks.forEach(s => {
           // Purge old hardcoded dummy prices so real-time price fetching is forced
-          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000) {
+          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000 || (s.code === "000660" && s.currentPrice > 1600000)) {
             s.currentPrice = null;
           }
         });
@@ -2837,6 +2837,8 @@ body {
           totalKRWPool += basePool;
         }
 
+        const schedule = computeNextSchedule(stock, historyData);
+
         const card = document.createElement('div');
         card.className = 'glass-card stock-card';
         card.innerHTML = `
@@ -2855,7 +2857,7 @@ body {
           <div class="stock-card-details">
             <div class="stock-detail-item">
               <span class="stock-detail-label">현재가 (실시간)</span>
-              <span class="stock-detail-val">${formatCurrency(basePrice, stock.currency)}</span>
+              <span class="stock-detail-val" id="stock-card-price-${stock.id}">${formatCurrency(basePrice, stock.currency)}</span>
             </div>
             <div class="stock-detail-item">
               <span class="stock-detail-label">평단가</span>
@@ -2866,7 +2868,11 @@ body {
               <span class="stock-detail-val">${baseQty.toLocaleString()}주</span>
             </div>
           </div>
-          <div class="signal-status-bar">
+          <div class="stock-card-schedule" style="margin-top:8px; padding:6px 10px; background:rgba(99,102,241,0.12); border-radius:8px; border:1px solid rgba(99,102,241,0.25); font-size:0.75rem; color:#c7d2fe; display:flex; justify-content:space-between; align-items:center;">
+            <span>🗓️ 현재 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> 기간: <strong style="color:#ffffff;">${schedule.periodText}</strong></span>
+            <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.7rem; flex-shrink:0;">${schedule.dDayBadge}</span>
+          </div>
+          <div class="signal-status-bar" style="margin-top:6px;">
             <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
             <span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>
           </div>
