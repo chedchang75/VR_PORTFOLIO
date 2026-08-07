@@ -2032,7 +2032,7 @@ body {
           code: 'TQQQ',
           name: 'ProShares UltraPro QQQ',
           currency: 'USD',
-          currentPrice: 64.00,
+          currentPrice: 72.03,
           targetBuyPrice: 65.37,
           targetSellPrice: 88.43,
           strategyType: 'VR',
@@ -2051,7 +2051,7 @@ body {
           code: '005930',
           name: '삼성전자',
           currency: 'KRW',
-          currentPrice: 249500,
+          currentPrice: 234000,
           targetBuyPrice: 240000,
           targetSellPrice: 265000,
           strategyType: 'VR',
@@ -2093,7 +2093,7 @@ body {
           code: '122630',
           name: 'KODEX 200레버리지',
           currency: 'KRW',
-          currentPrice: 45000,
+          currentPrice: 90725,
           targetBuyPrice: 42000,
           targetSellPrice: 49000,
           strategyType: 'VR',
@@ -2148,17 +2148,40 @@ body {
         let needsSave = false;
 
         this.data.stocks.forEach(s => {
-          // Purge old hardcoded dummy prices (249500, 64.00, 45000) and stale Hynix 1781000 price
-          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000 || (s.code === '000660' && s.currentPrice > 1600000)) {
-            s.currentPrice = (s.code === '000660') ? 1419000 : null;
+          // Purge stale dummy prices for ALL stocks
+          if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
+            s.currentPrice = 72.03;
+            needsSave = true;
+          } else if (s.code === '005930' && (s.currentPrice === 249500 || s.currentPrice > 240000 || !s.currentPrice)) {
+            s.currentPrice = 234000;
+            needsSave = true;
+          } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
+            s.currentPrice = 1427000;
+            needsSave = true;
+          } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || !s.currentPrice)) {
+            s.currentPrice = 90725;
+            needsSave = true;
+          } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice > 200000 || !s.currentPrice)) {
+            s.currentPrice = 93505;
+            needsSave = true;
+          } else if (!s.currentPrice || isNaN(s.currentPrice)) {
+            s.currentPrice = s.avgPrice || null;
             needsSave = true;
           }
 
-          // Purge stale 1781000 from SK Hynix history rows
+          // Purge stale 1781000 or 249500 from history rows if present
           if (s.code === '000660' && s.history) {
             s.history.forEach(h => {
               if (h.price > 1600000) {
-                h.price = 1419000;
+                h.price = 1427000;
+                needsSave = true;
+              }
+            });
+          }
+          if (s.code === '005930' && s.history) {
+            s.history.forEach(h => {
+              if (h.price > 240000) {
+                h.price = 234000;
                 needsSave = true;
               }
             });
@@ -2435,7 +2458,7 @@ body {
 
         // 1. Domestic KRX stock (6 digits e.g. 005930, 000660, 122630, 423920)
         if (/^\d{6}$/.test(cleanCode)) {
-          // A. Naver Realtime Polling API (CORS friendly, fast)
+          // A. Naver Realtime Polling API
           try {
             const res = await fetch(`https://polling.finance.naver.com/api/realtime?query=SERVICE_ITEM:${cleanCode}`);
             if (res.ok) {
@@ -2448,7 +2471,7 @@ body {
             }
           } catch (e) {}
 
-          // B. Daum Finance API (CORS friendly)
+          // B. Daum Finance API
           try {
             const res = await fetch(`https://finance.daum.net/api/quotes/A${cleanCode}`);
             if (res.ok) {
