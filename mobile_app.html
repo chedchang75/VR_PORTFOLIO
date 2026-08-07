@@ -2145,10 +2145,23 @@ body {
 
       sanitizeData() {
         if (!this.data || !this.data.stocks) return;
+        let needsSave = false;
+
         this.data.stocks.forEach(s => {
-          // Purge old hardcoded dummy prices so real-time price fetching is forced
-          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000 || (s.code === "000660" && s.currentPrice > 1600000)) {
-            s.currentPrice = null;
+          // Purge old hardcoded dummy prices (249500, 64.00, 45000) and stale Hynix 1781000 price
+          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000 || (s.code === '000660' && s.currentPrice > 1600000)) {
+            s.currentPrice = (s.code === '000660') ? 1419000 : null;
+            needsSave = true;
+          }
+
+          // Purge stale 1781000 from SK Hynix history rows
+          if (s.code === '000660' && s.history) {
+            s.history.forEach(h => {
+              if (h.price > 1600000) {
+                h.price = 1419000;
+                needsSave = true;
+              }
+            });
           }
         });
 
@@ -2159,8 +2172,12 @@ body {
             tqqq.holdings = 4257;
             tqqq.avgPrice = 39.35;
             tqqq.v1 = 327365.03;
-            this.saveData();
+            needsSave = true;
           }
+        }
+
+        if (needsSave) {
+          this.saveData();
         }
       }
 
