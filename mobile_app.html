@@ -2170,6 +2170,15 @@ body {
             needsSave = true;
           }
 
+          // If stock is NOT the original default ProShares UltraPro QQQ (stk_1), purge any accidentally copied sample TQQQ history
+          if (s.id !== 'stk_1' && s.name !== 'ProShares UltraPro QQQ' && s.history) {
+            const isLeakedSample = s.history.some(h => h.date === '25.10.27~11.9' || h.date === '25.7.6~7.19' || h.targetV === 327365.03 || h.targetV === 225572.43);
+            if (isLeakedSample) {
+              s.history = [];
+              needsSave = true;
+            }
+          }
+
           // Move/Sync history into separate archiveDB
           if (s.history && s.history.length > 0) {
             this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
@@ -2182,13 +2191,14 @@ body {
         }
         this.saveArchiveDB();
 
-        const tqqq = (this.data.stocks || []).find(s => s.code === 'TQQQ');
-        if (tqqq) {
-          if (!tqqq.history || tqqq.history.length < 10) {
-            tqqq.history = sampleTqqqHistory;
-            tqqq.holdings = 4257;
-            tqqq.avgPrice = 39.35;
-            tqqq.v1 = 327365.03;
+        // Sample TQQQ history is ONLY for original default stk_1 (ProShares UltraPro QQQ)
+        const tqqqOriginal = (this.data.stocks || []).find(s => s.id === 'stk_1' && s.name === 'ProShares UltraPro QQQ');
+        if (tqqqOriginal) {
+          if (!tqqqOriginal.history || tqqqOriginal.history.length < 10) {
+            tqqqOriginal.history = sampleTqqqHistory;
+            tqqqOriginal.holdings = 4257;
+            tqqqOriginal.avgPrice = 39.35;
+            tqqqOriginal.v1 = 327365.03;
             needsSave = true;
           }
         }
@@ -2591,7 +2601,7 @@ body {
     function formatCurrency(val, currency = 'USD') {
       if (val === undefined || val === null || isNaN(val)) return currency === 'USD' ? '$0.00' : '₩0';
       if (currency === 'USD') {
-        return `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       }
       return `₩${Math.round(val).toLocaleString()}`;
     }
