@@ -2145,73 +2145,83 @@ body {
       }
 
       sanitizeData() {
-        if (!this.data || !this.data.stocks) return;
-        let needsSave = false;
+        try {
+          if (!this.data || !this.data.stocks) return;
+          let needsSave = false;
 
-        // Initialize separate Archive DB for past history and transactions
-        this.archiveDB = this.loadArchiveDB();
+          // Initialize separate Archive DB for past history and transactions
+          this.archiveDB = this.loadArchiveDB();
+          if (!this.archiveDB.weeklyHistory) this.archiveDB.weeklyHistory = {};
 
-        this.data.stocks.forEach(s => {
-          // Keep currentPrice pure: NEVER fallback to avgPrice
-          if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
-            s.currentPrice = 72.03;
-            needsSave = true;
-          } else if (s.code === '005930' && (s.currentPrice === 249500 || s.currentPrice > 240000 || !s.currentPrice)) {
-            s.currentPrice = 234000;
-            needsSave = true;
-          } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
-            s.currentPrice = 1426000;
-            needsSave = true;
-          } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || s.currentPrice === 113390 || !s.currentPrice)) {
-            s.currentPrice = 90690;
-            needsSave = true;
-          } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice === 104410 || s.currentPrice > 200000 || !s.currentPrice)) {
-            s.currentPrice = 93530;
-            needsSave = true;
+          this.data.stocks.forEach(s => {
+            // Keep currentPrice pure: NEVER fallback to avgPrice
+            if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
+              s.currentPrice = 72.03;
+              needsSave = true;
+            } else if (s.code === '005930' && (s.currentPrice === 249500 || s.currentPrice > 240000 || !s.currentPrice)) {
+              s.currentPrice = 234000;
+              needsSave = true;
+            } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
+              s.currentPrice = 1426000;
+              needsSave = true;
+            } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || s.currentPrice === 113390 || !s.currentPrice)) {
+              s.currentPrice = 90690;
+              needsSave = true;
+            } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice === 104410 || s.currentPrice > 200000 || !s.currentPrice)) {
+              s.currentPrice = 93530;
+              needsSave = true;
+            }
+
+            // If stock is NOT the original default ProShares UltraPro QQQ (stk_1), purge any accidentally copied sample TQQQ history
+            if (s.id !== 'stk_1' && s.name !== 'ProShares UltraPro QQQ' && s.history) {
+              const isLeakedSample = s.history.some(h => h.date === '25.10.27~11.9' || h.date === '25.7.6~7.19' || h.targetV === 327365.03 || h.targetV === 225572.43);
+              if (isLeakedSample) {
+                s.history = [];
+                needsSave = true;
+              }
+            }
+
+            // Move/Sync history into separate archiveDB
+            if (s.history && s.history.length > 0) {
+              this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
+            }
+          });
+
+          // Sync past transactions into separate archiveDB
+          if (this.data.transactions && this.data.transactions.length > 0) {
+            this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
           }
+          this.saveArchiveDB();
 
-          // If stock is NOT the original default ProShares UltraPro QQQ (stk_1), purge any accidentally copied sample TQQQ history
-          if (s.id !== 'stk_1' && s.name !== 'ProShares UltraPro QQQ' && s.history) {
-            const isLeakedSample = s.history.some(h => h.date === '25.10.27~11.9' || h.date === '25.7.6~7.19' || h.targetV === 327365.03 || h.targetV === 225572.43);
-            if (isLeakedSample) {
-              s.history = [];
+          // Sample TQQQ history is ONLY for original default stk_1 (ProShares UltraPro QQQ)
+          const tqqqOriginal = (this.data.stocks || []).find(s => s.id === 'stk_1' && s.name === 'ProShares UltraPro QQQ');
+          if (tqqqOriginal) {
+            if (!tqqqOriginal.history || tqqqOriginal.history.length < 10) {
+              tqqqOriginal.history = sampleTqqqHistory;
+              tqqqOriginal.holdings = 4257;
+              tqqqOriginal.avgPrice = 39.35;
+              tqqqOriginal.v1 = 327365.03;
               needsSave = true;
             }
           }
 
-          // Move/Sync history into separate archiveDB
-          if (s.history && s.history.length > 0) {
-            this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
+          if (needsSave) {
+            this.saveData();
           }
-        });
-
-        // Sync past transactions into separate archiveDB
-        if (this.data.transactions && this.data.transactions.length > 0) {
-          this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
+        } catch (e) {
+          console.error('sanitizeData error:', e);
         }
-        this.saveArchiveDB();
-
-        // Sample TQQQ history is ONLY for original default stk_1 (ProShares UltraPro QQQ)
-        const tqqqOriginal = (this.data.stocks || []).find(s => s.id === 'stk_1' && s.name === 'ProShares UltraPro QQQ');
-        if (tqqqOriginal) {
-          if (!tqqqOriginal.history || tqqqOriginal.history.length < 10) {
-            tqqqOriginal.history = sampleTqqqHistory;
-            tqqqOriginal.holdings = 4257;
-            tqqqOriginal.avgPrice = 39.35;
-            tqqqOriginal.v1 = 327365.03;
-            needsSave = true;
-          }
-        }
-
-        if (needsSave) {
-          this.saveData();
-        }
-      }
-
-      loadArchiveDB() {
+      }loadArchiveDB() {
         try {
           const raw = localStorage.getItem(ARCHIVE_STORAGE_KEY);
-          if (raw) return JSON.parse(raw);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            return {
+              weeklyHistory: (parsed && typeof parsed.weeklyHistory === 'object' && parsed.weeklyHistory !== null) ? parsed.weeklyHistory : {},
+              transactions: (parsed && Array.isArray(parsed.transactions)) ? parsed.transactions : [],
+              gridHistoryByWeek: (parsed && typeof parsed.gridHistoryByWeek === 'object' && parsed.gridHistoryByWeek !== null) ? parsed.gridHistoryByWeek : {}
+            };
+          }
         } catch (e) {}
         return { weeklyHistory: {}, transactions: [], gridHistoryByWeek: {} };
       }
