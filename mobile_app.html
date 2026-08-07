@@ -2813,7 +2813,7 @@ body {
     // Unconditional Automatic Cloud Pull whenever accessing app or clicking sync
     async function syncFromSupabase(isManual = false) {
       try {
-        const cacheBustUrl = `${SUPABASE_URL}/rest/v1/vr_portfolio?id=eq.user_portfolio&select=*&t=${Date.now()}`;
+        const cacheBustUrl = `${SUPABASE_URL}/rest/v1/vr_portfolio?id=eq.user_portfolio&select=*`;
         const res = await fetch(cacheBustUrl, {
           method: 'GET',
           headers: {
