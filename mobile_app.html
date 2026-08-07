@@ -2217,6 +2217,7 @@ body {
         stock.v1 = targetV;
         stock.buyGridState = {};
         stock.sellGridState = {};
+        stock.gridHistoryByWeek = {};
 
         this.saveData();
         this.recalculateAllWeeklyHistory(stockId);
@@ -2226,10 +2227,21 @@ body {
         const stock = (this.data.stocks || []).find(s => s.id === stockId);
         if (!stock) return;
         if (!stock.history) stock.history = [];
+        if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+        const sorted = [...stock.history].sort((a, b) => a.week - b.week);
+        const lastWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
+        // Archive current active week grid to separate DB
+        stock.gridHistoryByWeek[lastWeek] = {
+          buyGridState: JSON.parse(JSON.stringify(stock.buyGridState || {})),
+          sellGridState: JSON.parse(JSON.stringify(stock.sellGridState || {}))
+        };
 
         stock.history = stock.history.filter(h => h.week !== newRecord.week);
         stock.history.push(newRecord);
         stock.history.sort((a, b) => a.week - b.week);
+
         stock.buyGridState = {};
         stock.sellGridState = {};
 
@@ -2252,10 +2264,26 @@ body {
       deleteWeeklyRecord(stockId, weekNum) {
         const stock = (this.data.stocks || []).find(s => s.id === stockId);
         if (!stock || !stock.history) return;
+        if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+        delete stock.gridHistoryByWeek[weekNum];
 
         stock.history = stock.history.filter(h => h.week !== parseInt(weekNum));
         this.saveData();
         this.recalculateAllWeeklyHistory(stockId);
+
+        const sorted = [...stock.history].sort((a, b) => a.week - b.week);
+        const newLatestWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
+        if (stock.gridHistoryByWeek[newLatestWeek]) {
+          stock.buyGridState = JSON.parse(JSON.stringify(stock.gridHistoryByWeek[newLatestWeek].buyGridState || {}));
+          stock.sellGridState = JSON.parse(JSON.stringify(stock.gridHistoryByWeek[newLatestWeek].sellGridState || {}));
+        } else {
+          stock.buyGridState = {};
+          stock.sellGridState = {};
+        }
+
+        this.saveData();
       }
 
       recalculateAllWeeklyHistory(stockId) {
@@ -3140,16 +3168,29 @@ body {
 
         const saveRowStateAndReRender = () => {
           if (window.currentModalStock) {
-            if (!window.currentModalStock.buyGridState) window.currentModalStock.buyGridState = {};
+            const stock = window.currentModalStock;
+            if (!stock.buyGridState) stock.buyGridState = {};
+            if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+            const history = appStore.getStockHistory(stock.id);
+            const sorted = [...history].sort((a, b) => a.week - b.week);
+            const activeWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
             const parsedActualPrice = parseFloat(actualPriceInp.value);
             const parsedActualQty = parseFloat(buyQtyInp.value);
             
-            window.currentModalStock.buyGridState[rowKey] = {
+            stock.buyGridState[rowKey] = {
               executed: chk.checked,
               date: dateInp.value || new Date().toISOString().split('T')[0],
               actualPrice: !isNaN(parsedActualPrice) && parsedActualPrice > 0 ? parsedActualPrice : null,
               actualQty: !isNaN(parsedActualQty) && parsedActualQty > 0 ? parsedActualQty : defaultStepQty
             };
+
+            stock.gridHistoryByWeek[activeWeek] = {
+              buyGridState: JSON.parse(JSON.stringify(stock.buyGridState)),
+              sellGridState: JSON.parse(JSON.stringify(stock.sellGridState || {}))
+            };
+
             appStore.saveData();
             renderInteractiveBuyGrid(minBandVal, baseQty, initialPool, defaultStepQty, currency, buyLimitPercent);
           }
@@ -3242,16 +3283,29 @@ body {
 
         const saveRowStateAndReRender = () => {
           if (window.currentModalStock) {
-            if (!window.currentModalStock.sellGridState) window.currentModalStock.sellGridState = {};
+            const stock = window.currentModalStock;
+            if (!stock.sellGridState) stock.sellGridState = {};
+            if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+            const history = appStore.getStockHistory(stock.id);
+            const sorted = [...history].sort((a, b) => a.week - b.week);
+            const activeWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
             const parsedActualPrice = parseFloat(actualPriceInp.value);
             const parsedActualQty = parseFloat(sellQtyInp.value);
 
-            window.currentModalStock.sellGridState[rowKey] = {
+            stock.sellGridState[rowKey] = {
               executed: chk.checked,
               date: dateInp.value || new Date().toISOString().split('T')[0],
               actualPrice: !isNaN(parsedActualPrice) && parsedActualPrice > 0 ? parsedActualPrice : null,
               actualQty: !isNaN(parsedActualQty) && parsedActualQty > 0 ? parsedActualQty : defaultStep
             };
+
+            stock.gridHistoryByWeek[activeWeek] = {
+              buyGridState: JSON.parse(JSON.stringify(stock.buyGridState || {})),
+              sellGridState: JSON.parse(JSON.stringify(stock.sellGridState))
+            };
+
             appStore.saveData();
             renderInteractiveSellGrid(maxBandVal, baseQty, initialPool, defaultStepQty, currency);
           }
