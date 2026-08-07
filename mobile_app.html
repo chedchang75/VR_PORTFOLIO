@@ -2144,12 +2144,19 @@ body {
       }
 
       sanitizeData() {
+        if (!this.data || !this.data.stocks) return;
+        this.data.stocks.forEach(s => {
+          // Purge old hardcoded dummy prices so real-time price fetching is forced
+          if (s.currentPrice === 249500 || s.currentPrice === 64.00 || s.currentPrice === 45000) {
+            s.currentPrice = null;
+          }
+        });
+
         const tqqq = (this.data.stocks || []).find(s => s.code === 'TQQQ');
         if (tqqq) {
           if (!tqqq.history || tqqq.history.length < 10) {
             tqqq.history = sampleTqqqHistory;
             tqqq.holdings = 4257;
-            tqqq.currentPrice = 64.00;
             tqqq.avgPrice = 39.35;
             tqqq.v1 = 327365.03;
             this.saveData();
@@ -2411,7 +2418,32 @@ body {
 
         // 1. Domestic KRX stock (6 digits e.g. 005930, 000660, 122630, 423920)
         if (/^\d{6}$/.test(cleanCode)) {
-          // Direct Naver Mobile Stock API (No forbidden User-Agent header)
+          // A. Naver Realtime Polling API (CORS friendly, fast)
+          try {
+            const res = await fetch(`https://polling.finance.naver.com/api/realtime?query=SERVICE_ITEM:${cleanCode}`);
+            if (res.ok) {
+              const json = await res.json();
+              const item = json.result?.areas?.[0]?.datas?.[0];
+              if (item && item.nv) {
+                const val = parseFloat(item.nv);
+                if (!isNaN(val) && val > 0) return val;
+              }
+            }
+          } catch (e) {}
+
+          // B. Daum Finance API (CORS friendly)
+          try {
+            const res = await fetch(`https://finance.daum.net/api/quotes/A${cleanCode}`);
+            if (res.ok) {
+              const json = await res.json();
+              if (json && json.tradePrice) {
+                const val = parseFloat(json.tradePrice);
+                if (!isNaN(val) && val > 0) return val;
+              }
+            }
+          } catch (e) {}
+
+          // C. Naver Mobile Basic API
           try {
             const res = await fetch(`https://m.stock.naver.com/api/stock/${cleanCode}/basic`);
             if (res.ok) {
@@ -2423,19 +2455,9 @@ body {
             }
           } catch (e) {}
 
-          // Fallback Yahoo Finance KRX (.KS)
+          // D. Yahoo Finance KRX (.KS)
           try {
             const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KS?interval=1d`);
-            if (res.ok) {
-              const json = await res.json();
-              const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
-              if (price && !isNaN(price) && price > 0) return price;
-            }
-          } catch (e) {}
-
-          // Fallback Yahoo Finance KOSDAQ (.KQ)
-          try {
-            const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KQ?interval=1d`);
             if (res.ok) {
               const json = await res.json();
               const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
@@ -2447,6 +2469,15 @@ body {
         // 2. Overseas US Stock (e.g. TQQQ, QQQ, AAPL, NVDA)
         try {
           const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`);
+          if (res.ok) {
+            const json = await res.json();
+            const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
+            if (price && !isNaN(price) && price > 0) return price;
+          }
+        } catch (e) {}
+
+        try {
+          const res = await fetch(`https://query2.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`);
           if (res.ok) {
             const json = await res.json();
             const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
@@ -2475,10 +2506,33 @@ body {
       async fetchAllPricesAndExchangeRate(stocks) {
         const rate = await this.fetchUSDExchangeRate();
         const stockPrices = {};
-        for (const s of stocks) {
-          const p = await this.fetchPrice(s.code);
-          if (p) stockPrices[s.id] = p;
+
+        // Try batch polling first for KRX stocks
+        const krxCodes = stocks.filter(s => /^\d{6}$/.test(s.code)).map(s => s.code);
+        if (krxCodes.length > 0) {
+          try {
+            const res = await fetch(`https://polling.finance.naver.com/api/realtime?query=SERVICE_ITEM:${krxCodes.join(',')}`);
+            if (res.ok) {
+              const json = await res.json();
+              const datas = json.result?.areas?.[0]?.datas || [];
+              datas.forEach(d => {
+                const s = stocks.find(stk => stk.code === d.cd);
+                if (s && d.nv) {
+                  stockPrices[s.id] = parseFloat(d.nv);
+                }
+              });
+            }
+          } catch(e) {}
         }
+
+        // Fetch remaining individually
+        for (const s of stocks) {
+          if (!stockPrices[s.id]) {
+            const p = await this.fetchPrice(s.code);
+            if (p) stockPrices[s.id] = p;
+          }
+        }
+
         return { exchangeRate: rate, stockPrices };
       }
     }
@@ -2527,7 +2581,7 @@ body {
       }
     }
 
-    function initApp() {
+    async function initApp() {
       bindNavigation();
       bindModalEvents();
       bindDetailModalTabs();
@@ -2535,10 +2589,12 @@ body {
       bindBackupEvents();
       bindAddNewStockEvents();
       
-      refreshRealtimePrices();
       renderDashboard();
       renderTransactions();
       renderStrategies();
+
+      // Trigger immediate live price refresh on startup
+      await refreshRealtimePrices();
     }
 
     function bindBackupEvents() {
