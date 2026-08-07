@@ -2237,19 +2237,22 @@ body {
           const defaultQty = stock.qtyStep || 10;
           const defaultPrice = stock.currentPrice || stock.avgPrice || 100;
 
-          // Helper to process grid state (active or historical)
-          const processGridState = (gridState, prefix) => {
+          const history = this.getStockHistory(stock.id) || [];
+          const sorted = [...history].sort((a, b) => a.week - b.week);
+          const activeWeekNum = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
+          // Helper to sync grid rows with a unique canonical ID per week and rowKey
+          const processGridRows = (gridState, type, weekNum) => {
             if (!gridState) return;
             Object.keys(gridState).forEach(rowKey => {
               const st = gridState[rowKey];
-              const txId = `tx_grid_${stock.id}_${prefix}_${rowKey}`;
+              const txId = `tx_grid_${stock.id}_w${weekNum}_${type.toLowerCase()}_${rowKey}`;
               const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
 
               if (st && st.executed) {
                 const qty = Number(st.actualQty || st.orderQty || defaultQty);
                 const price = Number(st.actualPrice || st.price || defaultPrice);
                 const date = st.date || new Date().toISOString().split('T')[0];
-                const type = prefix.includes('buy') ? 'BUY' : 'SELL';
 
                 if (qty > 0 && price > 0) {
                   if (existingIdx !== -1) {
@@ -2277,19 +2280,36 @@ body {
             });
           };
 
-          // Process active Buy & Sell grid state
-          processGridState(stock.buyGridState, 'buy');
-          processGridState(stock.sellGridState, 'sell');
+          // 1. Process active week grid state
+          processGridRows(stock.buyGridState, 'BUY', activeWeekNum);
+          processGridRows(stock.sellGridState, 'SELL', activeWeekNum);
 
-          // Process archived weekly grid states
+          // 2. Process historical week grid states (skipping activeWeekNum to prevent duplicate sync)
           if (stock.gridHistoryByWeek) {
-            Object.keys(stock.gridHistoryByWeek).forEach(wNum => {
-              const wHist = stock.gridHistoryByWeek[wNum] || {};
-              processGridState(wHist.buyGridState, `w${wNum}_buy`);
-              processGridState(wHist.sellGridState, `w${wNum}_sell`);
+            Object.keys(stock.gridHistoryByWeek).forEach(wNumStr => {
+              const wNum = parseInt(wNumStr);
+              if (wNum !== activeWeekNum) {
+                const wHist = stock.gridHistoryByWeek[wNumStr] || {};
+                processGridRows(wHist.buyGridState, 'BUY', wNum);
+                processGridRows(wHist.sellGridState, 'SELL', wNum);
+              }
             });
           }
         });
+
+        // Deduplicate any legacy duplicated transaction entries by unique key (stockId + date + type + quantity + price)
+        const uniqueTxMap = new Map();
+        const cleanedTxs = [];
+        this.data.transactions.forEach(tx => {
+          const key = tx.id ? tx.id : `${tx.stockId}_${tx.date}_${tx.type}_${tx.quantity}_${tx.price}`;
+          if (!uniqueTxMap.has(key)) {
+            uniqueTxMap.set(key, true);
+            cleanedTxs.push(tx);
+          } else {
+            modified = true;
+          }
+        });
+        this.data.transactions = cleanedTxs;
 
         if (modified) {
           this.saveData();
@@ -3640,12 +3660,54 @@ body {
       }
     }
 
+    window.deleteTxDirect = deleteTxDirect;
     function deleteTxDirect(txId) {
       if (confirm('이 매매일지 거래 기록을 삭제하시겠습니까?')) {
+        // 1. Remove from transactions list
         appStore.data.transactions = (appStore.data.transactions || []).filter(t => t.id !== txId);
+        
+        // 2. If it is a grid-linked transaction (e.g. tx_grid_stk_1_w38_buy_buy_1), uncheck executed in grid states
+        if (txId && txId.startsWith('tx_grid_')) {
+          const match = txId.match(/^tx_grid_(.+)_(w\d+)_(buy|sell)_(.+)$/);
+          if (match) {
+            const stockId = match[1];
+            const wNum = parseInt(match[2].replace('w', ''));
+            const type = match[3]; // 'buy' or 'sell'
+            const rowKey = match[4]; // 'buy_1' or 'sell_1'
+
+            const stock = (appStore.getStocks() || []).find(s => s.id === stockId);
+            if (stock) {
+              const gridProp = type === 'buy' ? 'buyGridState' : 'sellGridState';
+              
+              if (stock[gridProp] && stock[gridProp][rowKey]) {
+                stock[gridProp][rowKey].executed = false;
+              }
+              if (stock.gridHistoryByWeek && stock.gridHistoryByWeek[wNum] && stock.gridHistoryByWeek[wNum][gridProp] && stock.gridHistoryByWeek[wNum][gridProp][rowKey]) {
+                stock.gridHistoryByWeek[wNum][gridProp][rowKey].executed = false;
+              }
+            }
+          }
+        }
+
         appStore.saveData();
+        if (appStore.archiveDB) {
+          appStore.archiveDB.transactions = JSON.parse(JSON.stringify(appStore.data.transactions));
+          appStore.saveArchiveDB();
+        }
+
         renderTransactions();
         renderDashboard();
+
+        // Refresh modal grid if open
+        if (window.currentModalStock) {
+          const updatedStock = appStore.getStocks().find(s => s.id === window.currentModalStock.id);
+          if (updatedStock && typeof openStockDetailModal === 'function') {
+            const modal = document.getElementById('stock-detail-modal');
+            if (modal && modal.classList.contains('active')) {
+              openStockDetailModal(updatedStock);
+            }
+          }
+        }
       }
     }
 
