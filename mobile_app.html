@@ -2121,6 +2121,9 @@ body {
       ]
     };
 
+    const SUPABASE_URL = 'https://mpfvbabwzejhjljgicor.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_VkVYKr9xgzdHge-GsMZrig_OR671JXg';
+    var isSupabaseSyncing = false;
     class Store {
       constructor() {
         this.data = this.loadData();
@@ -2224,8 +2227,11 @@ body {
         } catch (e) {}
       }
 
-      saveData(data = this.data) {
+      saveData(data = this.data, syncToCloud = true) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        if (syncToCloud && typeof syncToSupabase === 'function') {
+          syncToSupabase(data, false);
+        }
       }
 
       getStocks() { return this.data.stocks || []; }
@@ -2754,10 +2760,9 @@ body {
     }
 
     
-    const SUPABASE_URL = 'https://mpfvbabwzejhjljgicor.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_VkVYKr9xgzdHge-GsMZrig_OR671JXg';
-    let isSupabaseSyncing = false;
 
+
+    // Unconditional Automatic Cloud Push whenever any data changes
     async function syncToSupabase(data = appStore.data, isManual = false) {
       if (isSupabaseSyncing) return false;
       try {
@@ -2778,24 +2783,25 @@ body {
         });
 
         if (res.ok) {
-          console.log('⚡ Supabase REST UPSERT SUCCESS!');
+          console.log('⚡ Supabase REST AUTO-PUSH SUCCESS!');
           if (isManual) {
-            alert('⬆️ 내 기기의 현재 포트폴리오 데이터가 Supabase 클라우드에 성공적으로 업로드(저장)되었습니다!\n\n이제 다른 기기(모바일/PC)에서 ⚡ 버튼을 누르면 이 데이터가 동기화됩니다.');
+            alert('⚡ 현재 포트폴리오 데이터가 Supabase 클라우드 서버에 안전하게 자동 저장되었습니다!');
           }
           return true;
         } else {
-          console.warn('Supabase REST UPSERT HTTP status:', res.status);
-          if (isManual) alert('Supabase 클라우드 업로드 실패 (HTTP ' + res.status + ')');
+          console.warn('Supabase REST PUSH HTTP status:', res.status);
+          if (isManual) alert('Supabase 서버 저장 실패 (HTTP ' + res.status + ')');
         }
       } catch (e) {
-        console.warn('Supabase REST UPSERT error:', e);
-        if (isManual) alert('Supabase 업로드 네트워크 오류: ' + e.message);
+        console.warn('Supabase REST PUSH error:', e);
+        if (isManual) alert('Supabase 서버 연결 오류: ' + e.message);
       } finally {
         isSupabaseSyncing = false;
       }
       return false;
     }
 
+    // Unconditional Automatic Cloud Pull whenever accessing app or clicking sync
     async function syncFromSupabase(isManual = false) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/vr_portfolio?id=eq.user_portfolio&select=*`, {
@@ -2807,7 +2813,7 @@ body {
         });
 
         if (!res.ok) {
-          if (isManual) alert('⚡ Supabase 클라우드 동기화 실패 (HTTP ' + res.status + ')');
+          if (isManual) alert('⚡ Supabase 서버 연결 실패 (HTTP ' + res.status + ')');
           return false;
         }
 
@@ -2821,15 +2827,15 @@ body {
           renderStrategies();
 
           if (isManual) {
-            alert('⬇️ Supabase 클라우드 DB로부터 PC/모바일 최신 데이터가 100% 성공적으로 다운로드(동기화)되었습니다!');
+            alert('⚡ Supabase 클라우드 서버의 최신 데이터를 성공적으로 동기화하여 가져왔습니다!');
           }
           return true;
         } else {
-          // Cloud is empty -> auto upload current local data to populate cloud DB
-          console.log('Cloud DB empty. Auto-uploading current local portfolio data to Supabase...');
+          // Cloud DB empty -> populate server with initial data
+          console.log('Cloud DB empty. Populating Supabase server with initial data...');
           await syncToSupabase(appStore.data, false);
           if (isManual) {
-            alert('⚡ Supabase 클라우드에 기존 데이터가 없어서, 현재 기기의 포트폴리오 데이터를 클라우드에 최초 등록(업로드)했습니다!\n\n이제 다른 기기에서 접속 시 이 데이터가 자동으로 동기화됩니다.');
+            alert('⚡ Supabase 클라우드 서버에 기존 데이터가 없어, 현재 데이터가 최초 자동 등록되었습니다.');
           }
         }
       } catch (e) {
@@ -2840,14 +2846,8 @@ body {
     }
 
     async function handleCloudSyncButtonClick() {
-      const choice = confirm('⚡ Supabase 클라우드 데이터 동기화\n\n[확인] 클라우드의 최신 데이터를 내 기기로 가져오기 (다운로드)\n[취소] 내 기기의 현재 포트폴리오 데이터를 클라우드로 올리기 (업로드)');
-      if (choice) {
-        // Download from cloud
-        await syncFromSupabase(true);
-      } else {
-        // Upload to cloud
-        await syncToSupabase(appStore.data, true);
-      }
+      // Direct 1-click sync from server (no confusing prompt dialogs)
+      await syncFromSupabase(true);
     }
 
     function setupSupabaseAutoPolling() {
@@ -2860,10 +2860,10 @@ body {
           syncFromSupabase(false);
         }
       });
-      // Periodic background polling every 10 seconds
+      // Periodic background polling every 5 seconds for real-time synchronization
       setInterval(() => {
         syncFromSupabase(false);
-      }, 10000);
+      }, 5000);
     }
 
     function bindBackupEvents() {
