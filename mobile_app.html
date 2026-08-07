@@ -2409,12 +2409,11 @@ body {
         if (!code) return null;
         const cleanCode = String(code).trim().toUpperCase();
 
-        // 1. Domestic KRX stock (6 digits e.g. 005930, 000660, 122630)
+        // 1. Domestic KRX stock (6 digits e.g. 005930, 000660, 122630, 423920)
         if (/^\d{6}$/.test(cleanCode)) {
+          // Direct Naver Mobile Stock API (No forbidden User-Agent header)
           try {
-            const res = await fetch(`https://m.stock.naver.com/api/stock/${cleanCode}/basic`, {
-              headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
+            const res = await fetch(`https://m.stock.naver.com/api/stock/${cleanCode}/basic`);
             if (res.ok) {
               const json = await res.json();
               if (json && json.closePrice) {
@@ -2424,10 +2423,19 @@ body {
             }
           } catch (e) {}
 
+          // Fallback Yahoo Finance KRX (.KS)
           try {
-            const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KS?interval=1d`, {
-              headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
+            const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KS?interval=1d`);
+            if (res.ok) {
+              const json = await res.json();
+              const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
+              if (price && !isNaN(price) && price > 0) return price;
+            }
+          } catch (e) {}
+
+          // Fallback Yahoo Finance KOSDAQ (.KQ)
+          try {
+            const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}.KQ?interval=1d`);
             if (res.ok) {
               const json = await res.json();
               const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
@@ -2438,9 +2446,7 @@ body {
 
         // 2. Overseas US Stock (e.g. TQQQ, QQQ, AAPL, NVDA)
         try {
-          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-          });
+          const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanCode}?interval=1d`);
           if (res.ok) {
             const json = await res.json();
             const price = json.chart?.result?.[0]?.meta?.regularMarketPrice;
