@@ -2234,77 +2234,61 @@ body {
         let modified = false;
 
         this.data.stocks.forEach(stock => {
-          // Sync Buy Grid Executions
-          const buyState = stock.buyGridState || {};
-          Object.keys(buyState).forEach(rowKey => {
-            const st = buyState[rowKey];
-            const txId = `tx_grid_${stock.id}_${rowKey}`;
-            const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
+          const defaultQty = stock.qtyStep || 10;
+          const defaultPrice = stock.currentPrice || stock.avgPrice || 100;
 
-            if (st && st.executed) {
-              const qty = Number(st.actualQty || st.orderQty || 0);
-              const price = Number(st.actualPrice || st.price || 0);
-              const date = st.date || new Date().toISOString().split('T')[0];
+          // Helper to process grid state (active or historical)
+          const processGridState = (gridState, prefix) => {
+            if (!gridState) return;
+            Object.keys(gridState).forEach(rowKey => {
+              const st = gridState[rowKey];
+              const txId = `tx_grid_${stock.id}_${prefix}_${rowKey}`;
+              const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
 
-              if (qty > 0 && price > 0) {
-                if (existingIdx !== -1) {
-                  this.data.transactions[existingIdx].date = date;
-                  this.data.transactions[existingIdx].quantity = qty;
-                  this.data.transactions[existingIdx].price = price;
-                } else {
-                  this.data.transactions.push({
-                    id: txId,
-                    stockId: stock.id,
-                    date,
-                    type: 'BUY',
-                    quantity: qty,
-                    price,
-                    fee: 0
-                  });
+              if (st && st.executed) {
+                const qty = Number(st.actualQty || st.orderQty || defaultQty);
+                const price = Number(st.actualPrice || st.price || defaultPrice);
+                const date = st.date || new Date().toISOString().split('T')[0];
+                const type = prefix.includes('buy') ? 'BUY' : 'SELL';
+
+                if (qty > 0 && price > 0) {
+                  if (existingIdx !== -1) {
+                    this.data.transactions[existingIdx].date = date;
+                    this.data.transactions[existingIdx].quantity = qty;
+                    this.data.transactions[existingIdx].price = price;
+                    this.data.transactions[existingIdx].type = type;
+                  } else {
+                    this.data.transactions.push({
+                      id: txId,
+                      stockId: stock.id,
+                      date,
+                      type,
+                      quantity: qty,
+                      price,
+                      fee: 0
+                    });
+                  }
+                  modified = true;
                 }
+              } else if (existingIdx !== -1) {
+                this.data.transactions.splice(existingIdx, 1);
                 modified = true;
               }
-            } else if (existingIdx !== -1) {
-              this.data.transactions.splice(existingIdx, 1);
-              modified = true;
-            }
-          });
+            });
+          };
 
-          // Sync Sell Grid Executions
-          const sellState = stock.sellGridState || {};
-          Object.keys(sellState).forEach(rowKey => {
-            const st = sellState[rowKey];
-            const txId = `tx_grid_${stock.id}_${rowKey}`;
-            const existingIdx = this.data.transactions.findIndex(t => t.id === txId);
+          // Process active Buy & Sell grid state
+          processGridState(stock.buyGridState, 'buy');
+          processGridState(stock.sellGridState, 'sell');
 
-            if (st && st.executed) {
-              const qty = Number(st.actualQty || st.orderQty || 0);
-              const price = Number(st.actualPrice || st.price || 0);
-              const date = st.date || new Date().toISOString().split('T')[0];
-
-              if (qty > 0 && price > 0) {
-                if (existingIdx !== -1) {
-                  this.data.transactions[existingIdx].date = date;
-                  this.data.transactions[existingIdx].quantity = qty;
-                  this.data.transactions[existingIdx].price = price;
-                } else {
-                  this.data.transactions.push({
-                    id: txId,
-                    stockId: stock.id,
-                    date,
-                    type: 'SELL',
-                    quantity: qty,
-                    price,
-                    fee: 0
-                  });
-                }
-                modified = true;
-              }
-            } else if (existingIdx !== -1) {
-              this.data.transactions.splice(existingIdx, 1);
-              modified = true;
-            }
-          });
+          // Process archived weekly grid states
+          if (stock.gridHistoryByWeek) {
+            Object.keys(stock.gridHistoryByWeek).forEach(wNum => {
+              const wHist = stock.gridHistoryByWeek[wNum] || {};
+              processGridState(wHist.buyGridState, `w${wNum}_buy`);
+              processGridState(wHist.sellGridState, `w${wNum}_sell`);
+            });
+          }
         });
 
         if (modified) {
