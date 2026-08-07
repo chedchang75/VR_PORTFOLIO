@@ -2145,83 +2145,73 @@ body {
       }
 
       sanitizeData() {
-        try {
-          if (!this.data || !this.data.stocks) return;
-          let needsSave = false;
+        if (!this.data || !this.data.stocks) return;
+        let needsSave = false;
 
-          // Initialize separate Archive DB for past history and transactions
-          this.archiveDB = this.loadArchiveDB();
-          if (!this.archiveDB.weeklyHistory) this.archiveDB.weeklyHistory = {};
+        // Initialize separate Archive DB for past history and transactions
+        this.archiveDB = this.loadArchiveDB();
 
-          this.data.stocks.forEach(s => {
-            // Keep currentPrice pure: NEVER fallback to avgPrice
-            if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
-              s.currentPrice = 72.03;
-              needsSave = true;
-            } else if (s.code === '005930' && (s.currentPrice === 249500 || s.currentPrice > 240000 || !s.currentPrice)) {
-              s.currentPrice = 234000;
-              needsSave = true;
-            } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
-              s.currentPrice = 1426000;
-              needsSave = true;
-            } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || s.currentPrice === 113390 || !s.currentPrice)) {
-              s.currentPrice = 90690;
-              needsSave = true;
-            } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice === 104410 || s.currentPrice > 200000 || !s.currentPrice)) {
-              s.currentPrice = 93530;
-              needsSave = true;
-            }
-
-            // If stock is NOT the original default ProShares UltraPro QQQ (stk_1), purge any accidentally copied sample TQQQ history
-            if (s.id !== 'stk_1' && s.name !== 'ProShares UltraPro QQQ' && s.history) {
-              const isLeakedSample = s.history.some(h => h.date === '25.10.27~11.9' || h.date === '25.7.6~7.19' || h.targetV === 327365.03 || h.targetV === 225572.43);
-              if (isLeakedSample) {
-                s.history = [];
-                needsSave = true;
-              }
-            }
-
-            // Move/Sync history into separate archiveDB
-            if (s.history && s.history.length > 0) {
-              this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
-            }
-          });
-
-          // Sync past transactions into separate archiveDB
-          if (this.data.transactions && this.data.transactions.length > 0) {
-            this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
+        this.data.stocks.forEach(s => {
+          // Keep currentPrice pure: NEVER fallback to avgPrice
+          if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
+            s.currentPrice = 72.03;
+            needsSave = true;
+          } else if (s.code === '005930' && (s.currentPrice === 249500 || s.currentPrice > 240000 || !s.currentPrice)) {
+            s.currentPrice = 234000;
+            needsSave = true;
+          } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
+            s.currentPrice = 1426000;
+            needsSave = true;
+          } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || s.currentPrice === 113390 || !s.currentPrice)) {
+            s.currentPrice = 90690;
+            needsSave = true;
+          } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice === 104410 || s.currentPrice > 200000 || !s.currentPrice)) {
+            s.currentPrice = 93530;
+            needsSave = true;
           }
-          this.saveArchiveDB();
 
-          // Sample TQQQ history is ONLY for original default stk_1 (ProShares UltraPro QQQ)
-          const tqqqOriginal = (this.data.stocks || []).find(s => s.id === 'stk_1' && s.name === 'ProShares UltraPro QQQ');
-          if (tqqqOriginal) {
-            if (!tqqqOriginal.history || tqqqOriginal.history.length < 10) {
-              tqqqOriginal.history = sampleTqqqHistory;
-              tqqqOriginal.holdings = 4257;
-              tqqqOriginal.avgPrice = 39.35;
-              tqqqOriginal.v1 = 327365.03;
+          // If stock is NOT the original default ProShares UltraPro QQQ (stk_1), purge any accidentally copied sample TQQQ history
+          if (s.id !== 'stk_1' && s.name !== 'ProShares UltraPro QQQ' && s.history) {
+            const isLeakedSample = s.history.some(h => h.date === '25.10.27~11.9' || h.date === '25.7.6~7.19' || h.targetV === 327365.03 || h.targetV === 225572.43);
+            if (isLeakedSample) {
+              s.history = [];
               needsSave = true;
             }
           }
 
-          if (needsSave) {
-            this.saveData();
+          // Move/Sync history into separate archiveDB
+          if (s.history && s.history.length > 0) {
+            this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
           }
-        } catch (e) {
-          console.error('sanitizeData error:', e);
+        });
+
+        // Sync past transactions into separate archiveDB
+        if (this.data.transactions && this.data.transactions.length > 0) {
+          this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
         }
-      }loadArchiveDB() {
+        this.saveArchiveDB();
+
+        // Sample TQQQ history is ONLY for original default stk_1 (ProShares UltraPro QQQ)
+        const tqqqOriginal = (this.data.stocks || []).find(s => s.id === 'stk_1' && s.name === 'ProShares UltraPro QQQ');
+        if (tqqqOriginal) {
+          if (!tqqqOriginal.history || tqqqOriginal.history.length < 10) {
+            tqqqOriginal.history = sampleTqqqHistory;
+            tqqqOriginal.holdings = 4257;
+            tqqqOriginal.avgPrice = 39.35;
+            tqqqOriginal.v1 = 327365.03;
+            needsSave = true;
+          }
+        }
+
+        if (needsSave) {
+          this.saveData();
+        }
+      }
+
+      loadArchiveDB() {
         try {
           const raw = localStorage.getItem(ARCHIVE_STORAGE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            return {
-              weeklyHistory: (parsed && typeof parsed.weeklyHistory === 'object' && parsed.weeklyHistory !== null) ? parsed.weeklyHistory : {},
-              transactions: (parsed && Array.isArray(parsed.transactions)) ? parsed.transactions : [],
-              gridHistoryByWeek: (parsed && typeof parsed.gridHistoryByWeek === 'object' && parsed.gridHistoryByWeek !== null) ? parsed.gridHistoryByWeek : {}
-            };
-          }
+          if (raw) return JSON.parse(raw);
         } catch (e) {}
         return { weeklyHistory: {}, transactions: [], gridHistoryByWeek: {} };
       }
@@ -2765,27 +2755,20 @@ body {
 
       if (btnExport) {
         btnExport.addEventListener('click', () => {
-          const todayStr = new Date().toISOString().split('T')[0];
-          const fileName = `VR_Portfolio_Backup_${todayStr}.json`;
           const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appStore.data, null, 2));
-          
           const downloadAnchor = document.createElement('a');
           downloadAnchor.setAttribute("href", dataStr);
-          downloadAnchor.setAttribute("download", fileName);
+          downloadAnchor.setAttribute("download", `VR_Portfolio_Backup_${new Date().toISOString().split('T')[0]}.json`);
           document.body.appendChild(downloadAnchor);
           downloadAnchor.click();
           downloadAnchor.remove();
-
-          alert(`📤 GITHUB 레포지토리 [DB파일] 폴더 저장용 백업 파일이 생성되었습니다!\n\n📁 파일명: ${fileName}\n📌 GITHUB 저장소의 [DB파일] 폴더에 저장/이동하여 커밋해 주세요.`);
+          alert('📤 PC/모바일 포트폴리오 백업 파일(JSON)이 다운로드되었습니다!');
         });
       }
 
       if (btnImport && fileInput) {
-        btnImport.addEventListener('click', async () => {
-          const choice = confirm('📁 GITHUB [DB파일] 폴더의 백업 파일(.json)을 직접 선택하여 불러오시겠습니까?\n\n[확인] 버튼 클릭 시 내 컴퓨터 / GITHUB 레포지토리 [DB파일] 폴더에서 파일을 선택합니다.');
-          if (choice) {
-            fileInput.click();
-          }
+        btnImport.addEventListener('click', () => {
+          fileInput.click();
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -2802,15 +2785,1176 @@ body {
                 renderDashboard();
                 renderTransactions();
                 renderStrategies();
-                alert(`📥 GITHUB [DB파일] (${file.name}) 백업 데이터가 성공적으로 100% 동기화 복원되었습니다!`);
+                alert('📥 백업 파일의 종목 및 매매일지 데이터가 성공적으로 100% 동기화 복원되었습니다!');
               } else {
                 alert('올바른 백업 JSON 파일 형식이 아닙니다.');
               }
             } catch (err) {
-              alert('JSON 파싱 중 오류가 발생했습니다: ' + err.message);
+              console.error('Failed to parse backup JSON:', err);
+              alert('파일을 읽는 도중 오류가 발생했습니다.');
             }
           };
           reader.readAsText(file);
+        });
+      }
+    }
+
+        window.switchTab = function(tabName) {
+      const navItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+      if (navItem) navItem.click();
+    };
+
+    function bindNavigation() {
+      const navItems = document.querySelectorAll('.nav-item');
+      const tabViews = document.querySelectorAll('.tab-view');
+      const summaryCard = document.querySelector('.summary-card');
+
+      navItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const targetTab = item.getAttribute('data-tab');
+
+          navItems.forEach(n => n.classList.remove('active'));
+          tabViews.forEach(v => v.classList.remove('active'));
+
+          item.classList.add('active');
+          const activeView = document.getElementById(`view-${targetTab}`);
+          if (activeView) {
+            activeView.classList.add('active');
+          }
+
+          if (summaryCard) {
+            summaryCard.style.display = (targetTab === 'dashboard') ? 'block' : 'none';
+          }
+
+          if (targetTab === 'transactions') {
+            renderTransactions();
+          } else if (targetTab === 'strategy') {
+            renderStrategies();
+          } else if (targetTab === 'dashboard') {
+            renderDashboard();
+          }
+        });
+      });
+
+      const btnAddTxDirect = document.getElementById('btn-add-tx-direct');
+      if (btnAddTxDirect) {
+        btnAddTxDirect.addEventListener('click', () => {
+          openTradeModal();
+        });
+      }
+    }
+
+    function bindDetailModalTabs() {
+      const tabBtns = document.querySelectorAll('.detail-tab-btn');
+      const tabContents = document.querySelectorAll('.detail-tab-content');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTab = btn.getAttribute('data-detail-tab');
+
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+
+          btn.classList.add('active');
+          const content = document.getElementById(`detail-tab-${targetTab}`);
+          if (content) {
+            content.classList.add('active');
+          }
+        });
+      });
+    }
+
+    function bindRefreshEvents() {
+      const btnRefresh = document.getElementById('btn-refresh-prices');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+          refreshRealtimePrices();
+        });
+      }
+    }
+
+    window.refreshRealtimePrices = refreshRealtimePrices;
+    async function refreshRealtimePrices() {
+      const btnRefresh = document.getElementById('btn-refresh-prices');
+      if (btnRefresh) {
+        btnRefresh.textContent = '⏳';
+        btnRefresh.style.pointerEvents = 'none';
+      }
+
+      try {
+        const stocks = appStore.getStocks();
+        const { exchangeRate, stockPrices } = await priceFetcher.fetchAllPricesAndExchangeRate(stocks);
+
+        if (exchangeRate && !isNaN(exchangeRate)) {
+          currentExchangeRate = exchangeRate;
+        }
+
+        stocks.forEach(stock => {
+          if (stockPrices[stock.id] && !isNaN(stockPrices[stock.id])) {
+            stock.currentPrice = stockPrices[stock.id];
+          }
+        });
+
+        appStore.saveData();
+        renderDashboard();
+
+        // If stock detail modal is open, refresh open modal with live price
+        if (window.currentModalStock) {
+          const updatedCurrentStock = stocks.find(s => s.id === window.currentModalStock.id);
+          if (updatedCurrentStock) {
+            window.currentModalStock = updatedCurrentStock;
+            const modal = document.getElementById('stock-detail-modal');
+            if (modal && modal.classList.contains('active')) {
+              openStockDetailModal(updatedCurrentStock);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to refresh realtime prices:', err);
+      } finally {
+        if (btnRefresh) {
+          btnRefresh.textContent = '🔄';
+          btnRefresh.style.pointerEvents = 'auto';
+        }
+      }
+    }
+
+    window.renderDashboard = renderDashboard;
+    function renderDashboard() {
+      const stocks = appStore.getStocks();
+
+      let totalInvestmentKRW = 0;
+      let totalEvaluationKRW = 0;
+      let totalUSDAsset = 0;
+      let totalKRWAsset = 0;
+      let totalUSDPool = 0;
+      let totalKRWPool = 0;
+
+      const stockListContainer = document.getElementById('stock-list-container');
+      if (!stockListContainer) return;
+
+      stockListContainer.innerHTML = '';
+
+      stocks.forEach(stock => {
+        const isUSD = stock.currency === 'USD';
+        const rate = isUSD ? currentExchangeRate : 1;
+
+        const historyData = appStore.getStockHistory(stock.id);
+        const sortedHistory = [...historyData].sort((a, b) => a.week - b.week);
+        const lastRow = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
+
+        const basePrice = (stock.currentPrice && !isNaN(stock.currentPrice) && stock.currentPrice > 0) ? stock.currentPrice : (lastRow ? lastRow.price : stock.avgPrice);
+        const baseQty = lastRow ? lastRow.qty : stock.holdings;
+        const basePool = lastRow ? (lastRow.poolCumulative || stock.vrTargetValue || 0) : (stock.vrTargetValue || 0);
+
+        const invCurrency = baseQty * stock.avgPrice;
+        const evalCurrency = baseQty * basePrice;
+
+        const invKRW = invCurrency * rate;
+        const evalKRW = evalCurrency * rate;
+        const pnlKRW = evalKRW - invKRW;
+        const pnlPercent = invKRW > 0 ? (pnlKRW / invKRW) * 100 : 0;
+
+        totalInvestmentKRW += invKRW;
+        totalEvaluationKRW += evalKRW;
+
+        if (isUSD) {
+          totalUSDAsset += evalCurrency;
+          totalUSDPool += basePool;
+        } else {
+          totalKRWAsset += evalCurrency;
+          totalKRWPool += basePool;
+        }
+
+        const schedule = computeNextSchedule(stock, historyData);
+
+        
+        // Calculate active week's executed buy/sell orders
+        const buyState = stock.buyGridState || {};
+        const sellState = stock.sellGridState || {};
+
+        let buyCount = 0, buyQty = 0, buyTotal = 0;
+        let sellCount = 0, sellQty = 0, sellTotal = 0;
+
+        Object.values(buyState).forEach(st => {
+          if (st && st.executed) {
+            buyCount++;
+            const qty = Number(st.actualQty || st.orderQty || 0);
+            const price = Number(st.actualPrice || st.price || 0);
+            buyQty += qty;
+            buyTotal += (qty * price);
+          }
+        });
+
+        Object.values(sellState).forEach(st => {
+          if (st && st.executed) {
+            sellCount++;
+            const qty = Number(st.actualQty || st.orderQty || 0);
+            const price = Number(st.actualPrice || st.price || 0);
+            sellQty += qty;
+            sellTotal += (qty * price);
+          }
+        });
+
+        const buyAvgPrice = buyQty > 0 ? (buyTotal / buyQty) : 0;
+        const sellAvgPrice = sellQty > 0 ? (sellTotal / sellQty) : 0;
+
+        const hasActiveTrades = (buyCount > 0 || sellCount > 0);
+        const tradeSummaryHtml = hasActiveTrades ? `
+          <div class="stock-card-trades-summary" style="margin-top:8px; padding:8px 12px; background:rgba(16, 185, 129, 0.08); border-radius:8px; border:1px solid rgba(16, 185, 129, 0.25); font-size:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-weight:700; color:#34d399;">🛒 이번 주차 체결 현황 요약</span>
+              <span style="background:rgba(52,211,153,0.2); color:#34d399; font-weight:700; padding:2px 8px; border-radius:4px; font-size:0.7rem;">총 ${buyCount + sellCount}건 체결 완료</span>
+            </div>
+            ${buyCount > 0 ? `
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#93c5fd; font-size:0.73rem; margin-top:2px;">
+                <span>📥 매수 체결 (${buyCount}건):</span>
+                <span><strong>+${buyQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(buyAvgPrice, stock.currency)}</strong> (${formatCurrency(buyTotal, stock.currency)})</span>
+              </div>
+            ` : ''}
+            ${sellCount > 0 ? `
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#fca5a5; font-size:0.73rem; margin-top:2px;">
+                <span>📤 매도 체결 (${sellCount}건):</span>
+                <span><strong>-${sellQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sellAvgPrice, stock.currency)}</strong> (${formatCurrency(sellTotal, stock.currency)})</span>
+              </div>
+            ` : ''}
+          </div>
+        ` : '';
+
+        const card = document.createElement('div');
+        card.className = 'glass-card stock-card';
+        card.innerHTML = `
+          <div class="stock-card-top">
+            <div class="stock-name-group">
+              <span class="stock-name">${stock.name}</span>
+              <span class="stock-code">${stock.code} · ${stock.currency}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="stock-badge ${pnlKRW >= 0 ? 'badge-up' : 'badge-down'}">
+                ${pnlKRW >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%
+              </span>
+              <button class="btn-secondary btn-delete-stock-card" style="padding:4px 8px; font-size:0.72rem; background:rgba(239,68,68,0.2); border-color:#ef4444; color:#f87171; font-weight:700; white-space:nowrap; flex-shrink:0;">🗑️ 삭제</button>
+            </div>
+          </div>
+          <div class="stock-card-details">
+            <div class="stock-detail-item">
+              <span class="stock-detail-label">현재가 (실시간)</span>
+              <span class="stock-detail-val" id="stock-card-price-${stock.id}">${formatCurrency(basePrice, stock.currency)}</span>
+            </div>
+            <div class="stock-detail-item">
+              <span class="stock-detail-label">평단가</span>
+              <span class="stock-detail-val">${formatCurrency(stock.avgPrice, stock.currency)}</span>
+            </div>
+            <div class="stock-detail-item">
+              <span class="stock-detail-label">보유수량</span>
+              <span class="stock-detail-val">${baseQty.toLocaleString()}주</span>
+            </div>
+          </div>
+          <div class="stock-card-schedule" style="margin-top:8px; padding:6px 10px; background:rgba(99,102,241,0.12); border-radius:8px; border:1px solid rgba(99,102,241,0.25); font-size:0.75rem; color:#c7d2fe; display:flex; justify-content:space-between; align-items:center;">
+            <span>🗓️ 현재 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> 기간: <strong style="color:#ffffff;">${schedule.periodText}</strong></span>
+            <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.7rem; flex-shrink:0;">${schedule.dDayBadge}</span>
+          </div>
+          ${tradeSummaryHtml}
+          <div class="signal-status-bar" style="margin-top:6px;">
+            <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
+            <span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>
+          </div>
+        `;
+
+        const btnDelete = card.querySelector('.btn-delete-stock-card');
+        if (btnDelete) {
+          btnDelete.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`[${stock.name} (${stock.code})] 종목을 포트폴리오에서 삭제하시겠습니까?`)) {
+              appStore.deleteStock(stock.id);
+              renderDashboard();
+              renderStrategies();
+            }
+          });
+        }
+
+        card.addEventListener('click', () => {
+          openStockDetailModal(stock);
+        });
+
+        stockListContainer.appendChild(card);
+      });
+
+      const totalPoolKRW = (totalUSDPool * currentExchangeRate) + totalKRWPool;
+      const totalNetAssetsKRW = totalEvaluationKRW + totalPoolKRW;
+      const totalPnLKRW = totalEvaluationKRW - totalInvestmentKRW;
+      const rateDisplay = document.getElementById('current-exchange-rate-display');
+      if (rateDisplay) {
+        rateDisplay.textContent = `실시간 환율: $1 = ₩${currentExchangeRate.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+      }
+      document.getElementById('total-assets-val').textContent = `₩${Math.round(totalNetAssetsKRW).toLocaleString()}`;
+      
+      const usdConvertedKRW = totalUSDAsset * currentExchangeRate;
+      document.getElementById('usd-assets-val').textContent = formatCurrency(totalUSDAsset, 'USD');
+      document.getElementById('usd-converted-krw').textContent = `(₩${Math.round(usdConvertedKRW).toLocaleString()})`;
+
+      document.getElementById('krw-assets-val').textContent = `₩${Math.round(totalKRWAsset).toLocaleString()}`;
+      
+      const usdPoolConvertedKRW = totalUSDPool * currentExchangeRate;
+      const usdPoolEl = document.getElementById('usd-pool-val');
+      if (usdPoolEl) {
+        usdPoolEl.textContent = `예수금: ${formatCurrency(totalUSDPool, 'USD')} (₩${Math.round(usdPoolConvertedKRW).toLocaleString()})`;
+      }
+
+      const krwPoolEl = document.getElementById('krw-pool-val');
+      if (krwPoolEl) {
+        krwPoolEl.textContent = `예수금: ₩${Math.round(totalKRWPool).toLocaleString()}`;
+      }
+
+      document.getElementById('total-invest-val').textContent = `₩${Math.round(totalInvestmentKRW).toLocaleString()}`;
+      
+      const totalPnLPercent = totalInvestmentKRW > 0 ? (totalPnLKRW / totalInvestmentKRW) * 100 : 0;
+      const pnlElement = document.getElementById('total-pnl-val');
+      pnlElement.textContent = `₩${Math.round(totalPnLKRW).toLocaleString()} (${totalPnLPercent >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%)`;
+      pnlElement.className = `summary-item-val ${totalPnLKRW >= 0 ? 'val-up' : 'val-down'}`;
+    }
+
+    
+    
+    function computeNextSchedule(stock, historyData) {
+      const cycleWeeks = stock.cycleWeeks || 2;
+      const daysToAdd = cycleWeeks * 7;
+
+      const sorted = [...(historyData || [])].sort((a, b) => a.week - b.week);
+      const lastRow = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+
+      let lastEndDate = new Date();
+
+      if (lastRow && lastRow.date) {
+        const parts = lastRow.date.split('~');
+        const endPart = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        
+        const dateMatch = endPart.match(/(\d{2,4})[.-](\d{1,2})[.-](\d{1,2})/) || endPart.match(/(\d{1,2})[.](\d{1,2})/);
+        if (dateMatch) {
+          const now = new Date();
+          let year = now.getFullYear();
+          let month = 1;
+          let day = 1;
+
+          if (dateMatch.length === 4) {
+            year = parseInt(dateMatch[1]);
+            if (year < 100) year += 2000;
+            month = parseInt(dateMatch[2]) - 1;
+            day = parseInt(dateMatch[3]);
+          } else if (dateMatch.length === 3) {
+            month = parseInt(dateMatch[1]) - 1;
+            day = parseInt(dateMatch[2]);
+          }
+          lastEndDate = new Date(year, month, day);
+        }
+      }
+
+      const nextStartDate = new Date(lastEndDate);
+      nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+      const nextEndDate = new Date(nextStartDate);
+      nextEndDate.setDate(nextEndDate.getDate() + daysToAdd - 1);
+
+      const startMM = nextStartDate.getMonth() + 1;
+      const startDD = nextStartDate.getDate();
+      const endMM = nextEndDate.getMonth() + 1;
+      const endDD = nextEndDate.getDate();
+      const endYY = String(nextEndDate.getFullYear()).slice(-2);
+
+      const periodText = `${endYY}.${startMM}.${startDD} ~ ${endMM}.${endDD}`;
+      const rebalanceDateStr = `${nextEndDate.getFullYear()}-${String(endMM).padStart(2, '0')}-${String(endDD).padStart(2, '0')}`;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetDate = new Date(nextEndDate);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const diffTime = targetDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+      
+      let dDayBadge = `D-${diffDays}`;
+      if (diffDays === 0) dDayBadge = 'D-Day (오늘 리밸런싱)';
+      else if (diffDays < 0) dDayBadge = `D+${Math.abs(diffDays)} (지남)`;
+
+      return {
+        nextWeekNum: lastRow ? (lastRow.week + cycleWeeks) : 0,
+        cycleWeeks,
+        periodText,
+        rebalanceDateStr,
+        dDayBadge
+      };
+    }
+
+    let modalHistoryChartInstance = null;
+
+    function renderModalHistoryChart(historyData, currency = 'USD') {
+      const canvas = document.getElementById('modalVrHistoryChart');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      if (modalHistoryChartInstance) {
+        modalHistoryChartInstance.destroy();
+        modalHistoryChartInstance = null;
+      }
+
+      if (!historyData || historyData.length === 0) return;
+
+      const sorted = [...historyData].sort((a, b) => a.week - b.week);
+      const labels = sorted.map(h => `${h.week}주차`);
+      const evalData = sorted.map(h => h.evalE);
+      const vData = sorted.map(h => h.targetV);
+      const minData = sorted.map(h => h.minBand);
+      const maxData = sorted.map(h => h.maxBand);
+
+      modalHistoryChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '목표가치 (V)',
+              data: vData,
+              borderColor: '#818cf8',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '평가금 (E)',
+              data: evalData,
+              borderColor: '#34d399',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '최소 밴드',
+              data: minData,
+              borderColor: '#38bdf8',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '최대 밴드',
+              data: maxData,
+              borderColor: '#f87171',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#94a3b8',
+                font: { size: 9 },
+                boxWidth: 10
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8', font: { size: 9 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            y: {
+              ticks: { color: '#94a3b8', font: { size: 9 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          }
+        }
+      });
+    }
+
+
+    function renderModalWeeklyHistoryTable(historyData, currency = 'USD') {
+      const tbody = document.getElementById('modal-progress-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!historyData || historyData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:20px; color:var(--text-sub);">🗓️ 등록된 주차별 기록 데이터가 없습니다. [🌱 0주차 설정]을 진행해주세요.</td></tr>`;
+        return;
+      }
+
+      const stock = window.currentModalStock;
+      const sorted = [...historyData].sort((a, b) => a.week - b.week);
+
+      sorted.forEach(row => {
+        const tr = document.createElement('tr');
+        const isLoss = row.profitPercent < 0;
+        const profitColor = isLoss ? 'var(--loss-blue)' : 'var(--profit-red)';
+        const profitSign = row.profitPercent > 0 ? '+' : '';
+        const qtyVal = (row.qty !== undefined && row.qty !== null) ? row.qty : (stock ? stock.holdings : 0);
+        const avgPriceVal = (row.avgPrice !== undefined && row.avgPrice !== null) ? row.avgPrice : (stock ? stock.avgPrice : row.price);
+        const totalAssetVal = (row.totalAsset !== undefined && row.totalAsset !== null) ? row.totalAsset : (row.evalE + (row.poolCumulative || 0));
+
+        tr.innerHTML = `
+          <td style="font-weight:700;">${row.week}주차</td>
+          <td style="font-size:0.75rem; color:var(--text-sub);">${row.date || '-'}</td>
+          <td>${formatCurrency(row.price, currency)}</td>
+          <td>${row.g || 15}</td>
+          <td>${formatCurrency(row.evalE, currency)}</td>
+          <td style="font-weight:700; color:#a5b4fc;">${formatCurrency(row.targetV, currency)}</td>
+          <td style="color:var(--loss-blue);">${formatCurrency(row.minBand, currency)}</td>
+          <td style="color:var(--profit-red);">${formatCurrency(row.maxBand, currency)}</td>
+          <td>${row.poolDelta > 0 ? '+' : ''}${formatCurrency(row.poolDelta, currency)}</td>
+          <td style="font-weight:600;">${formatCurrency(row.poolCumulative, currency)}</td>
+          <td style="font-weight:600; color:#e2e8f0;">${formatCurrency(totalAssetVal, currency)}</td>
+          <td style="font-weight:700; color:${profitColor};">${profitSign}${(row.profitPercent || 0).toFixed(2)}%</td>
+          <td style="font-weight:600; color:#38bdf8;">${Number(qtyVal).toLocaleString()}주</td>
+          <td style="font-weight:600; color:#a5b4fc;">${formatCurrency(avgPriceVal, currency)}</td>
+          <td>
+            <div style="display:flex; gap:4px; justify-content:center;">
+              <button type="button" class="btn-secondary" onclick="window.openEditWeekModalDirect(${row.week}, event)" style="font-size:0.68rem; padding:2px 6px;">✏️</button>
+              <button type="button" class="btn-secondary" onclick="window.deleteWeekRecordDirect(${row.week}, event)" style="font-size:0.68rem; padding:2px 6px; background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444;">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.openStockDetailModal = openStockDetailModal;
+    function openStockDetailModal(stock) {
+      window.currentModalStock = stock;
+      const modal = document.getElementById('stock-detail-modal');
+      if (!modal) return;
+
+      const nameEl = document.getElementById('modal-stock-name');
+      const codeEl = document.getElementById('modal-stock-code');
+      if (nameEl) nameEl.textContent = stock.name;
+      if (codeEl) codeEl.textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
+
+      // Fetch live price for open stock in background to guarantee 100% real-time accuracy
+      priceFetcher.fetchPrice(stock.code).then(livePrice => {
+        if (livePrice && !isNaN(livePrice) && livePrice !== stock.currentPrice) {
+          stock.currentPrice = livePrice;
+          if (codeEl) codeEl.textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
+          appStore.saveData();
+          try { renderModalSummaryTab(stock); } catch(e) {}
+          try { renderDashboard(); } catch(e) {}
+        }
+      }).catch(() => {});
+
+      const historyData = appStore.getStockHistory(stock.id);
+
+      // 1. Render Next Schedule Banner
+      try {
+        const schedule = computeNextSchedule(stock, historyData);
+        const schedText = document.getElementById('modal-next-schedule-text');
+        const badge = document.getElementById('modal-next-rebalance-date-badge');
+        if (schedText) {
+          schedText.innerHTML = `현재 진행 <span style="color:#6366f1;">${schedule.nextWeekNum}주차</span> 기간 (${stock.cycleWeeks || 2}주): <strong style="color:#ffffff;">${schedule.periodText}</strong> (현재 매매/리밸런싱일: <strong style="color:#34d399;">${schedule.rebalanceDateStr}</strong>)`;
+        }
+        if (badge) {
+          badge.textContent = schedule.dDayBadge;
+        }
+      } catch (e) {
+        console.error('Schedule calculation error:', e);
+      }
+
+      // 2. Render VR Trend History Chart
+      try {
+        renderModalHistoryChart(historyData, stock.currency);
+      } catch (e) {
+        console.error('History chart rendering error:', e);
+      }
+
+      // 3. Render Weekly Timeline History Table
+      try {
+        renderModalWeeklyHistoryTable(historyData, stock.currency);
+      } catch (e) {
+        console.error('Weekly table rendering error:', e);
+      }
+
+      // 4. Render Strategy Summary Tab
+      try {
+        renderModalSummaryTab(stock);
+      } catch (e) {
+        console.error('Summary tab rendering error:', e);
+      }
+
+      // 5. Render Buy & Sell Grids
+      try {
+        const sortedHistory = [...historyData].sort((a, b) => a.week - b.week);
+        const lastRow = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
+        const evalE = lastRow ? lastRow.evalE : (stock.holdings * stock.currentPrice);
+        const pool = lastRow ? (lastRow.poolCumulative || stock.vrTargetValue || 0) : (stock.vrTargetValue || 0);
+        const v1 = lastRow ? lastRow.targetV : (stock.v1 || evalE);
+
+        const vrResult = vrEngine.evaluate({
+          currentPrice: stock.currentPrice,
+          holdingItem: { qty: stock.holdings, avgPrice: stock.avgPrice, evaluationAmount: evalE },
+          strategyParams: {
+            v1,
+            pool,
+            G: stock.G || 15,
+            deposit: 0,
+            bandPercent: stock.vrBandPercent || 15,
+            cycleWeeks: stock.cycleWeeks || 2,
+            qtyStep: stock.qtyStep || 20,
+            buyLimitPercent: stock.buyLimitPercent || 25
+          }
+        });
+
+        const minBand = vrResult ? vrResult.minBandVal : (v1 * 0.85);
+        const maxBand = vrResult ? vrResult.maxBandVal : (v1 * 1.15);
+
+        renderInteractiveBuyGrid(minBand, stock.holdings, pool, stock.qtyStep || 20, stock.currency, stock.buyLimitPercent || 25);
+        renderInteractiveSellGrid(maxBand, stock.holdings, pool, stock.qtyStep || 20, stock.currency);
+      } catch (e) {
+        console.error('Grid rendering error:', e);
+      }
+
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.zIndex = '9000';
+    }
+
+    function renderInteractiveBuyGrid(minBandVal, baseQty, initialPool, defaultStepQty, currency = 'USD', buyLimitPercent = 25) {
+      const buyTbody = document.getElementById('buy-grid-tbody');
+      if (!buyTbody) return;
+
+      buyTbody.innerHTML = '';
+      const buyLimitRatio = Math.max(0.05, Math.min(1.0, buyLimitPercent / 100));
+      const maxBuyCostLimit = initialPool * buyLimitRatio;
+
+      let currentQty = baseQty;
+      let totalSpent = 0;
+      const stock = window.currentModalStock;
+      const savedState = (stock && stock.buyGridState) ? stock.buyGridState : {};
+
+      for (let idx = 0; idx < 30; idx++) {
+        const rowKey = `buy_${idx + 1}`;
+        const state = savedState[rowKey] || {};
+        const isExecuted = !!state.executed;
+        const execDate = state.date || '';
+
+        const calculatedPrice = minBandVal / Math.max(1, currentQty);
+        const actualPrice = (state.actualPrice !== undefined && state.actualPrice !== null && !isNaN(state.actualPrice) && state.actualPrice > 0) 
+                            ? Number(state.actualPrice) 
+                            : null;
+        
+        const effectivePrice = actualPrice || calculatedPrice;
+        const stepQty = (state.actualQty !== undefined && state.actualQty !== null && !isNaN(state.actualQty) && state.actualQty > 0)
+                        ? Number(state.actualQty)
+                        : defaultStepQty;
+
+        const buyCost = stepQty * effectivePrice;
+
+        if (totalSpent + buyCost > maxBuyCostLimit && idx > 0) break;
+
+        totalSpent += buyCost;
+        currentQty += stepQty;
+        const remainingLimit = Math.max(0, maxBuyCostLimit - totalSpent);
+
+        const tr = document.createElement('tr');
+        tr.className = 'interactive-buy-row';
+        tr.innerHTML = `
+          <td style="text-align:center;">
+            <input type="checkbox" class="executed-chk" ${isExecuted ? 'checked' : ''} title="체결 완료 처리">
+            <div class="exec-status-badge" style="font-size:0.62rem; font-weight:700; margin-top:2px;"></div>
+          </td>
+          <td style="font-weight:700; font-size:0.8rem;">${idx + 1}차</td>
+          <td>
+            <input type="date" class="exec-date-input form-input" value="${execDate}" style="padding:2px 4px; font-size:0.7rem; width:115px; text-align:center; background:#0f172a; color:#ffffff; border:1px solid var(--border-color); cursor:pointer;">
+          </td>
+          <td class="buy-price-val" style="font-weight:700; color:var(--loss-blue);">${formatCurrency(calculatedPrice, currency)}</td>
+          <td>
+            <input type="number" step="0.01" class="actual-price-input form-input" value="${actualPrice !== null ? actualPrice : ''}" placeholder="${calculatedPrice.toFixed(2)}" style="width:75px; padding:2px 4px; font-size:0.75rem; text-align:center; font-weight:700; border-color:#38bdf8; background:#0f172a; color:#ffffff;">
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+              <span>+</span>
+              <input type="number" step="1" min="1" class="buy-qty-input form-input" value="${stepQty}" style="width:55px; padding:2px 4px; font-size:0.75rem; text-align:center; font-weight:700; border-color:#6366f1;">
+              <span>주</span>
+            </div>
+          </td>
+          <td class="buy-cost-val">${formatCurrency(buyCost, currency)}</td>
+          <td class="buy-rem-qty-val" style="font-weight:600;">${currentQty.toLocaleString()}주</td>
+          <td class="buy-rem-pool-val" style="font-weight:700; color:#a5b4fc;">${formatCurrency(remainingLimit, currency)}</td>
+        `;
+
+        const chk = tr.querySelector('.executed-chk');
+        const dateInp = tr.querySelector('.exec-date-input');
+        const actualPriceInp = tr.querySelector('.actual-price-input');
+        const buyQtyInp = tr.querySelector('.buy-qty-input');
+
+        const saveRowStateAndReRender = () => {
+          if (window.currentModalStock) {
+            const stock = window.currentModalStock;
+            if (!stock.buyGridState) stock.buyGridState = {};
+            if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+            const history = appStore.getStockHistory(stock.id);
+            const sorted = [...history].sort((a, b) => a.week - b.week);
+            const activeWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
+            const parsedActualPrice = parseFloat(actualPriceInp.value);
+            const parsedActualQty = parseFloat(buyQtyInp.value);
+            
+            stock.buyGridState[rowKey] = {
+              executed: chk.checked,
+              date: dateInp.value || new Date().toISOString().split('T')[0],
+              actualPrice: !isNaN(parsedActualPrice) && parsedActualPrice > 0 ? parsedActualPrice : null,
+              actualQty: !isNaN(parsedActualQty) && parsedActualQty > 0 ? parsedActualQty : defaultStepQty
+            };
+
+            stock.gridHistoryByWeek[activeWeek] = {
+              buyGridState: JSON.parse(JSON.stringify(stock.buyGridState)),
+              sellGridState: JSON.parse(JSON.stringify(stock.sellGridState || {}))
+            };
+
+            appStore.saveData();
+            renderInteractiveBuyGrid(minBandVal, baseQty, initialPool, defaultStepQty, currency, buyLimitPercent);
+          }
+        };
+
+        if (isExecuted) {
+          setRowDimmedState(tr, true);
+        }
+
+        chk.addEventListener('change', () => {
+          if (chk.checked && !dateInp.value) {
+            dateInp.value = new Date().toISOString().split('T')[0];
+          }
+          saveRowStateAndReRender();
+        });
+
+        dateInp.addEventListener('change', saveRowStateAndReRender);
+        actualPriceInp.addEventListener('change', saveRowStateAndReRender);
+        buyQtyInp.addEventListener('change', saveRowStateAndReRender);
+
+        buyTbody.appendChild(tr);
+      }
+    }
+
+    function renderInteractiveSellGrid(maxBandVal, baseQty, initialPool, defaultStepQty, currency = 'USD') {
+      const sellTbody = document.getElementById('sell-grid-tbody');
+      if (!sellTbody) return;
+
+      sellTbody.innerHTML = '';
+      let currentQty = baseQty;
+      let currentPool = initialPool;
+      const stock = window.currentModalStock;
+      const savedState = (stock && stock.sellGridState) ? stock.sellGridState : {};
+
+      for (let idx = 0; idx < 30; idx++) {
+        if (currentQty <= 0) break;
+
+        const rowKey = `sell_${idx + 1}`;
+        const state = savedState[rowKey] || {};
+        const isExecuted = !!state.executed;
+        const execDate = state.date || '';
+
+        const calculatedPrice = maxBandVal / Math.max(1, currentQty);
+        const actualPrice = (state.actualPrice !== undefined && state.actualPrice !== null && !isNaN(state.actualPrice) && state.actualPrice > 0)
+                            ? Number(state.actualPrice)
+                            : null;
+        const effectivePrice = actualPrice || calculatedPrice;
+
+        const defaultStep = Math.min(defaultStepQty, currentQty);
+        const stepQty = (state.actualQty !== undefined && state.actualQty !== null && !isNaN(state.actualQty) && state.actualQty > 0)
+                        ? Math.min(Number(state.actualQty), currentQty)
+                        : defaultStep;
+
+        const sellIncome = stepQty * effectivePrice;
+
+        currentPool += sellIncome;
+        currentQty -= stepQty;
+
+        const tr = document.createElement('tr');
+        tr.className = 'interactive-sell-row';
+        tr.innerHTML = `
+          <td style="text-align:center;">
+            <input type="checkbox" class="executed-chk" ${isExecuted ? 'checked' : ''} title="체결 완료 처리">
+            <div class="exec-status-badge" style="font-size:0.62rem; font-weight:700; margin-top:2px;"></div>
+          </td>
+          <td style="font-weight:700; font-size:0.8rem;">${idx + 1}차</td>
+          <td>
+            <input type="date" class="exec-date-input form-input" value="${execDate}" style="padding:2px 4px; font-size:0.7rem; width:115px; text-align:center; background:#0f172a; color:#ffffff; border:1px solid var(--border-color); cursor:pointer;">
+          </td>
+          <td class="sell-price-val" style="font-weight:700; color:var(--profit-red);">${formatCurrency(calculatedPrice, currency)}</td>
+          <td>
+            <input type="number" step="0.01" class="actual-price-input form-input" value="${actualPrice !== null ? actualPrice : ''}" placeholder="${calculatedPrice.toFixed(2)}" style="width:75px; padding:2px 4px; font-size:0.75rem; text-align:center; font-weight:700; border-color:#f87171; background:#0f172a; color:#ffffff;">
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+              <span>-</span>
+              <input type="number" step="1" min="1" class="sell-qty-input form-input" value="${stepQty}" style="width:55px; padding:2px 4px; font-size:0.75rem; text-align:center; font-weight:700; border-color:#ef4444;">
+              <span>주</span>
+            </div>
+          </td>
+          <td class="sell-income-val">${formatCurrency(sellIncome, currency)}</td>
+          <td class="sell-rem-qty-val" style="font-weight:600;">${Math.max(0, currentQty).toLocaleString()}주</td>
+          <td class="sell-rem-pool-val">${formatCurrency(currentPool, currency)}</td>
+        `;
+
+        const chk = tr.querySelector('.executed-chk');
+        const dateInp = tr.querySelector('.exec-date-input');
+        const actualPriceInp = tr.querySelector('.actual-price-input');
+        const sellQtyInp = tr.querySelector('.sell-qty-input');
+
+        const saveRowStateAndReRender = () => {
+          if (window.currentModalStock) {
+            const stock = window.currentModalStock;
+            if (!stock.sellGridState) stock.sellGridState = {};
+            if (!stock.gridHistoryByWeek) stock.gridHistoryByWeek = {};
+
+            const history = appStore.getStockHistory(stock.id);
+            const sorted = [...history].sort((a, b) => a.week - b.week);
+            const activeWeek = sorted.length > 0 ? sorted[sorted.length - 1].week : 0;
+
+            const parsedActualPrice = parseFloat(actualPriceInp.value);
+            const parsedActualQty = parseFloat(sellQtyInp.value);
+
+            stock.sellGridState[rowKey] = {
+              executed: chk.checked,
+              date: dateInp.value || new Date().toISOString().split('T')[0],
+              actualPrice: !isNaN(parsedActualPrice) && parsedActualPrice > 0 ? parsedActualPrice : null,
+              actualQty: !isNaN(parsedActualQty) && parsedActualQty > 0 ? parsedActualQty : defaultStep
+            };
+
+            stock.gridHistoryByWeek[activeWeek] = {
+              buyGridState: JSON.parse(JSON.stringify(stock.buyGridState || {})),
+              sellGridState: JSON.parse(JSON.stringify(stock.sellGridState))
+            };
+
+            appStore.saveData();
+            renderInteractiveSellGrid(maxBandVal, baseQty, initialPool, defaultStepQty, currency);
+          }
+        };
+
+        if (isExecuted) {
+          setRowDimmedState(tr, true);
+        }
+
+        chk.addEventListener('change', () => {
+          if (chk.checked && !dateInp.value) {
+            dateInp.value = new Date().toISOString().split('T')[0];
+          }
+          saveRowStateAndReRender();
+        });
+
+        dateInp.addEventListener('change', saveRowStateAndReRender);
+        actualPriceInp.addEventListener('change', saveRowStateAndReRender);
+        sellQtyInp.addEventListener('change', saveRowStateAndReRender);
+
+        sellTbody.appendChild(tr);
+      }
+    }
+
+    window.deleteTxDirect = deleteTxDirect;
+    function deleteTxDirect(txId) {
+      if (confirm('이 매매일지 거래 기록을 삭제하시겠습니까?')) {
+        // 1. Remove from transactions list
+        appStore.data.transactions = (appStore.data.transactions || []).filter(t => t.id !== txId);
+        
+        // 2. If it is a grid-linked transaction (e.g. tx_grid_stk_1_w38_buy_buy_1), uncheck executed in grid states
+        if (txId && txId.startsWith('tx_grid_')) {
+          const match = txId.match(/^tx_grid_(.+)_(w\d+)_(buy|sell)_(.+)$/);
+          if (match) {
+            const stockId = match[1];
+            const wNum = parseInt(match[2].replace('w', ''));
+            const type = match[3]; // 'buy' or 'sell'
+            const rowKey = match[4]; // 'buy_1' or 'sell_1'
+
+            const stock = (appStore.getStocks() || []).find(s => s.id === stockId);
+            if (stock) {
+              const gridProp = type === 'buy' ? 'buyGridState' : 'sellGridState';
+              
+              if (stock[gridProp] && stock[gridProp][rowKey]) {
+                stock[gridProp][rowKey].executed = false;
+              }
+              if (stock.gridHistoryByWeek && stock.gridHistoryByWeek[wNum] && stock.gridHistoryByWeek[wNum][gridProp] && stock.gridHistoryByWeek[wNum][gridProp][rowKey]) {
+                stock.gridHistoryByWeek[wNum][gridProp][rowKey].executed = false;
+              }
+            }
+          }
+        }
+
+        appStore.saveData();
+        if (appStore.archiveDB) {
+          appStore.archiveDB.transactions = JSON.parse(JSON.stringify(appStore.data.transactions));
+          appStore.saveArchiveDB();
+        }
+
+        renderTransactions();
+        renderDashboard();
+
+        // Refresh modal grid if open
+        if (window.currentModalStock) {
+          const updatedStock = appStore.getStocks().find(s => s.id === window.currentModalStock.id);
+          if (updatedStock && typeof openStockDetailModal === 'function') {
+            const modal = document.getElementById('stock-detail-modal');
+            if (modal && modal.classList.contains('active')) {
+              openStockDetailModal(updatedStock);
+            }
+          }
+        }
+      }
+    }
+
+    function openEditStrategyModal(stockId) {
+      const stock = appStore.getStocks().find(s => s.id === stockId);
+      if (!stock) return;
+
+      const newCycle = prompt(`[${stock.name}] 리밸런싱 주차 주기를 입력하세요 (1, 2, 3, 4주차):`, stock.cycleWeeks || 2);
+      if (newCycle === null) return;
+
+      const newBand = prompt(`[${stock.name}] VR 밴드 비율 (%)을 입력하세요:`, stock.vrBandPercent || 15);
+      if (newBand === null) return;
+
+      const newG = prompt(`[${stock.name}] 적립 지수 (G)를 입력하세요:`, stock.G || 15);
+      if (newG === null) return;
+
+      const newStep = prompt(`[${stock.name}] 수량 주문단위 (주)를 입력하세요:`, stock.qtyStep || 10);
+      if (newStep === null) return;
+
+      const newBuy = prompt(`[${stock.name}] 목표 매수가를 입력하세요 (${stock.currency || 'KRW'}):`, stock.targetBuyPrice || 0);
+      if (newBuy === null) return;
+
+      const newSell = prompt(`[${stock.name}] 목표 매도가를 입력하세요 (${stock.currency || 'KRW'}):`, stock.targetSellPrice || 0);
+      if (newSell === null) return;
+
+      stock.cycleWeeks = parseInt(newCycle) || stock.cycleWeeks;
+      stock.vrBandPercent = parseFloat(newBand) || stock.vrBandPercent;
+      stock.G = parseFloat(newG) || stock.G;
+      stock.qtyStep = parseInt(newStep) || stock.qtyStep;
+      stock.targetBuyPrice = parseFloat(newBuy) || stock.targetBuyPrice;
+      stock.targetSellPrice = parseFloat(newSell) || stock.targetSellPrice;
+
+      appStore.saveData();
+      alert(`✅ [${stock.name}] 매매 전략 파라미터가 성공적으로 반영되었습니다.`);
+      renderStrategies();
+      renderDashboard();
+    }
+
+    window.renderTransactions = renderTransactions;
+    window.renderTransactions = renderTransactions;
+    function renderTransactions(filterStockId = 'ALL') {
+      if (appStore.syncGridExecutionsToTransactions) {
+        appStore.syncGridExecutionsToTransactions();
+      }
+
+      const txs = appStore.getTransactions();
+      const stocks = appStore.getStocks();
+      const txContainer = document.getElementById('tx-list-container');
+      const filterSelect = document.getElementById('tx-stock-filter-select');
+
+      if (!txContainer) return;
+
+      if (filterSelect) {
+        const currentVal = filterSelect.value || filterStockId;
+        filterSelect.innerHTML = '<option value="ALL">전체 종목 보기</option>';
+        stocks.forEach(stk => {
+          const opt = document.createElement('option');
+          opt.value = stk.id;
+          opt.textContent = `${stk.name} (${stk.code})`;
+          if (stk.id === currentVal) opt.selected = true;
+          filterSelect.appendChild(opt);
+        });
+
+        filterSelect.onchange = () => {
+          renderTransactions(filterSelect.value);
+        };
+      }
+
+      let filteredTxs = filterStockId === 'ALL' ? [...txs] : txs.filter(t => t.stockId === filterStockId);
+      
+      // Sort transactions by date descending
+      filteredTxs.sort((a, b) => new Date(b.date || '2000-01-01') - new Date(a.date || '2000-01-01'));
+
+      txContainer.innerHTML = '';
+
+      // 1. Render Active Week Trades Summary Card inside Trade Log View
+      const activeStocksWithTrades = (filterStockId === 'ALL' ? stocks : stocks.filter(s => s.id === filterStockId)).filter(stk => {
+        const b = stk.buyGridState || {};
+        const s = stk.sellGridState || {};
+        return Object.values(b).some(r => r && r.executed) || Object.values(s).some(r => r && r.executed);
+      });
+
+      if (activeStocksWithTrades.length > 0) {
+        const activeSummaryCard = document.createElement('div');
+        activeSummaryCard.className = 'glass-card';
+        activeSummaryCard.style.marginBottom = '16px';
+        activeSummaryCard.style.padding = '14px';
+        activeSummaryCard.style.background = 'rgba(16, 185, 129, 0.08)';
+        activeSummaryCard.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        activeSummaryCard.style.borderRadius = '12px';
+
+        let innerHtml = `
+          <div style="font-weight:700; font-size:0.92rem; color:#34d399; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span>🛒 현재 진행 주차 실시간 체결 현황 요약</span>
+            <span style="font-size:0.72rem; background:#059669; color:#ffffff; padding:2px 8px; border-radius:4px; font-weight:700;">실시간 자동 기록</span>
+          </div>
+        `;
+
+        activeStocksWithTrades.forEach(stk => {
+          const buyState = stk.buyGridState || {};
+          const sellState = stk.sellGridState || {};
+
+          let bCnt = 0, bQty = 0, bTot = 0;
+          let sCnt = 0, sQty = 0, sTot = 0;
+
+          Object.values(buyState).forEach(st => {
+            if (st && st.executed) {
+              bCnt++;
+              const q = Number(st.actualQty || st.orderQty || stk.qtyStep || 10);
+              const p = Number(st.actualPrice || st.price || stk.currentPrice || 100);
+              bQty += q;
+              bTot += (q * p);
+            }
+          });
+
+          Object.values(sellState).forEach(st => {
+            if (st && st.executed) {
+              sCnt++;
+              const q = Number(st.actualQty || st.orderQty || stk.qtyStep || 10);
+              const p = Number(st.actualPrice || st.price || stk.currentPrice || 100);
+              sQty += q;
+              sTot += (q * p);
+            }
+          });
+
+          const bAvg = bQty > 0 ? (bTot / bQty) : 0;
+          const sAvg = sQty > 0 ? (sTot / sQty) : 0;
+
+          innerHtml += `
+            <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+              <div style="font-weight:700; font-size:0.85rem; color:#ffffff;">${stk.name} (${stk.code})</div>
+              ${bCnt > 0 ? `
+                <div style="display:flex; justify-content:space-between; color:#93c5fd; font-size:0.78rem; margin-top:2px;">
+                  <span>📥 매수 체결 (${bCnt}건):</span>
+                  <span><strong>+${bQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(bAvg, stk.currency)}</strong> (${formatCurrency(bTot, stk.currency)})</span>
+                </div>
+              ` : ''}
+              ${sCnt > 0 ? `
+                <div style="display:flex; justify-content:space-between; color:#fca5a5; font-size:0.78rem; margin-top:2px;">
+                  <span>📤 매도 체결 (${sCnt}건):</span>
+                  <span><strong>-${sQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sAvg, stk.currency)}</strong> (${formatCurrency(sTot, stk.currency)})</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        activeSummaryCard.innerHTML = innerHtml;
+        txContainer.appendChild(activeSummaryCard);
+      }
+
+      if (filteredTxs.length === 0) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.textAlign = 'center';
+        emptyDiv.style.padding = '30px';
+        emptyDiv.style.color = 'var(--text-muted)';
+        emptyDiv.style.fontSize = '0.85rem';
+        emptyDiv.textContent = filterStockId === 'ALL' 
+          ? '기록된 과거 거래 내역이 없습니다. 매수/매도 그리드표에서 체결을 완료하면 자동 기록됩니다.' 
+          : '선택한 종목의 매매일지 거래 내역이 없습니다.';
+        txContainer.appendChild(emptyDiv);
+        return;
+      }
+
+      filteredTxs.forEach(tx => {
+        const stock = stocks.find(s => s.id === tx.stockId) || { name: '알 수 없음', code: 'N/A', currency: 'KRW' };
+        const totalAmount = (tx.quantity || 0) * (tx.price || 0);
+
+        const item = document.createElement('div');
+        item.className = 'tx-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.padding = '12px 14px';
+        item.style.borderBottom = '1px solid var(--border-color)';
+        item.style.background = 'rgba(255, 255, 255, 0.02)';
+        item.style.margin = '4px 0';
+        item.style.borderRadius = '8px';
+
+        item.innerHTML = `
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="tx-type-badge ${tx.type === 'BUY' ? 'tx-buy' : 'tx-sell'}" style="font-weight:700;">${tx.type === 'BUY' ? '매수' : '매도'}</span>
+              <strong style="font-size:0.95rem; color:#ffffff;">${stock.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${stock.code})</span></strong>
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">🗓️ ${tx.date || '날짜 미지정'}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="text-align:right;">
+              <div style="font-size:0.98rem; font-weight:700; color:${tx.type === 'BUY' ? '#60a5fa' : '#f87171'};">
+                ${formatCurrency(totalAmount, stock.currency)}
+              </div>
+              <div style="font-size:0.76rem; color:#cbd5e1; margin-top:2px;">
+                ${(tx.quantity || 0).toLocaleString()}주 @ ${formatCurrency(tx.price || 0, stock.currency)}
+              </div>
+            </div>
+            <button class="icon-btn" onclick="deleteTxDirect('${tx.id}')" title="거래 내역 삭제" style="color:#f87171; padding:4px 6px; border:none; background:transparent; cursor:pointer;">🗑️</button>
+          </div>
+        `;
+        txContainer.appendChild(item);
+      });
+    }
+
+    function renderStrategies() {
+      const stocks = appStore.getStocks();
+      const container = document.getElementById('strategy-list-container');
+      if (!container) return;
+
+      container.innerHTML = '';
+      stocks.forEach(stock => {
+        const card = document.createElement('div');
+        card.className = 'glass-card';
+        card.style.marginBottom = '14px';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <h4 style="font-size:1.05rem; font-weight:700;">${stock.name} (${stock.code})</h4>
+              <span style="font-size:0.75rem; color:var(--text-sub);">통화: ${stock.currency || 'KRW'} | 보유: ${(stock.holdings || 0).toLocaleString()}주</span>
+            </div>
+            <span class="exchange-rate-badge">${stock.strategyType || 'VR'}</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; font-size:0.85rem; background:rgba(15,23,42,0.6); padding:12px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px;">
+            <div>리밸런싱 주기: <strong style="color:#a5b4fc;">${stock.cycleWeeks || 2}주차</strong></div>
+            <div>VR 밴드 비율: <strong style="color:#a5b4fc;">±${stock.vrBandPercent || 15}%</strong></div>
+            <div>적립 지수(G): <strong style="color:#a5b4fc;">${stock.G || 15}</strong></div>
+            <div>수량 주문단위: <strong style="color:#a5b4fc;">${stock.qtyStep || 10}주</strong></div>
+            <div>목표 매수가: <strong style="color:#34d399;">${formatCurrency(stock.targetBuyPrice || 0, stock.currency)}</strong></div>
+            <div>목표 매도가: <strong style="color:#f87171;">${formatCurrency(stock.targetSellPrice || 0, stock.currency)}</strong></div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-primary" onclick="openEditStrategyModal('${stock.id}')" style="padding:6px 14px; font-size:0.78rem; font-weight:700;">
+              ⚙️ 전략 파라미터 수정
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function bindModalEvents() {
+      const modal = document.getElementById('stock-detail-modal');
+      const closeBtn = document.getElementById('close-stock-detail-modal');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          modal.classList.remove('active');
         });
       }
     }
