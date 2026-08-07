@@ -3685,7 +3685,12 @@ body {
     }
 
     window.renderTransactions = renderTransactions;
+    window.renderTransactions = renderTransactions;
     function renderTransactions(filterStockId = 'ALL') {
+      if (appStore.syncGridExecutionsToTransactions) {
+        appStore.syncGridExecutionsToTransactions();
+      }
+
       const txs = appStore.getTransactions();
       const stocks = appStore.getStocks();
       const txContainer = document.getElementById('tx-list-container');
@@ -3709,38 +3714,133 @@ body {
         };
       }
 
-      const filteredTxs = filterStockId === 'ALL' ? txs : txs.filter(t => t.stockId === filterStockId);
+      let filteredTxs = filterStockId === 'ALL' ? [...txs] : txs.filter(t => t.stockId === filterStockId);
+      
+      // Sort transactions by date descending
+      filteredTxs.sort((a, b) => new Date(b.date || '2000-01-01') - new Date(a.date || '2000-01-01'));
 
       txContainer.innerHTML = '';
+
+      // 1. Render Active Week Trades Summary Card inside Trade Log View
+      const activeStocksWithTrades = (filterStockId === 'ALL' ? stocks : stocks.filter(s => s.id === filterStockId)).filter(stk => {
+        const b = stk.buyGridState || {};
+        const s = stk.sellGridState || {};
+        return Object.values(b).some(r => r && r.executed) || Object.values(s).some(r => r && r.executed);
+      });
+
+      if (activeStocksWithTrades.length > 0) {
+        const activeSummaryCard = document.createElement('div');
+        activeSummaryCard.className = 'glass-card';
+        activeSummaryCard.style.marginBottom = '16px';
+        activeSummaryCard.style.padding = '14px';
+        activeSummaryCard.style.background = 'rgba(16, 185, 129, 0.08)';
+        activeSummaryCard.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        activeSummaryCard.style.borderRadius = '12px';
+
+        let innerHtml = `
+          <div style="font-weight:700; font-size:0.92rem; color:#34d399; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span>🛒 현재 진행 주차 실시간 체결 현황 요약</span>
+            <span style="font-size:0.72rem; background:#059669; color:#ffffff; padding:2px 8px; border-radius:4px; font-weight:700;">실시간 자동 기록</span>
+          </div>
+        `;
+
+        activeStocksWithTrades.forEach(stk => {
+          const buyState = stk.buyGridState || {};
+          const sellState = stk.sellGridState || {};
+
+          let bCnt = 0, bQty = 0, bTot = 0;
+          let sCnt = 0, sQty = 0, sTot = 0;
+
+          Object.values(buyState).forEach(st => {
+            if (st && st.executed) {
+              bCnt++;
+              const q = Number(st.actualQty || st.orderQty || stk.qtyStep || 10);
+              const p = Number(st.actualPrice || st.price || stk.currentPrice || 100);
+              bQty += q;
+              bTot += (q * p);
+            }
+          });
+
+          Object.values(sellState).forEach(st => {
+            if (st && st.executed) {
+              sCnt++;
+              const q = Number(st.actualQty || st.orderQty || stk.qtyStep || 10);
+              const p = Number(st.actualPrice || st.price || stk.currentPrice || 100);
+              sQty += q;
+              sTot += (q * p);
+            }
+          });
+
+          const bAvg = bQty > 0 ? (bTot / bQty) : 0;
+          const sAvg = sQty > 0 ? (sTot / sQty) : 0;
+
+          innerHtml += `
+            <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+              <div style="font-weight:700; font-size:0.85rem; color:#ffffff;">${stk.name} (${stk.code})</div>
+              ${bCnt > 0 ? `
+                <div style="display:flex; justify-content:space-between; color:#93c5fd; font-size:0.78rem; margin-top:2px;">
+                  <span>📥 매수 체결 (${bCnt}건):</span>
+                  <span><strong>+${bQty.toLocaleString()}주</strong> @ <strong style="color:#60a5fa;">${formatCurrency(bAvg, stk.currency)}</strong> (${formatCurrency(bTot, stk.currency)})</span>
+                </div>
+              ` : ''}
+              ${sCnt > 0 ? `
+                <div style="display:flex; justify-content:space-between; color:#fca5a5; font-size:0.78rem; margin-top:2px;">
+                  <span>📤 매도 체결 (${sCnt}건):</span>
+                  <span><strong>-${sQty.toLocaleString()}주</strong> @ <strong style="color:#f87171;">${formatCurrency(sAvg, stk.currency)}</strong> (${formatCurrency(sTot, stk.currency)})</span>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        activeSummaryCard.innerHTML = innerHtml;
+        txContainer.appendChild(activeSummaryCard);
+      }
+
       if (filteredTxs.length === 0) {
-        txContainer.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:0.85rem;">
-          ${filterStockId === 'ALL' ? '기록된 거래 내역이 없습니다. 상단 "+ 거래 기록 추가" 버튼으로 입력해보세요.' : '선택한 종목의 매매일지 거래 내역이 없습니다.'}
-        </div>`;
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.textAlign = 'center';
+        emptyDiv.style.padding = '30px';
+        emptyDiv.style.color = 'var(--text-muted)';
+        emptyDiv.style.fontSize = '0.85rem';
+        emptyDiv.textContent = filterStockId === 'ALL' 
+          ? '기록된 과거 거래 내역이 없습니다. 매수/매도 그리드표에서 체결을 완료하면 자동 기록됩니다.' 
+          : '선택한 종목의 매매일지 거래 내역이 없습니다.';
+        txContainer.appendChild(emptyDiv);
         return;
       }
 
       filteredTxs.forEach(tx => {
-        const stock = stocks.find(s => s.id === tx.stockId) || { name: '알 수 없음', currency: 'KRW' };
+        const stock = stocks.find(s => s.id === tx.stockId) || { name: '알 수 없음', code: 'N/A', currency: 'KRW' };
+        const totalAmount = (tx.quantity || 0) * (tx.price || 0);
+
         const item = document.createElement('div');
         item.className = 'tx-item';
         item.style.display = 'flex';
         item.style.justifyContent = 'space-between';
         item.style.alignItems = 'center';
-        item.style.padding = '12px';
+        item.style.padding = '12px 14px';
         item.style.borderBottom = '1px solid var(--border-color)';
+        item.style.background = 'rgba(255, 255, 255, 0.02)';
+        item.style.margin = '4px 0';
+        item.style.borderRadius = '8px';
 
         item.innerHTML = `
           <div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span class="tx-type-badge ${tx.type === 'BUY' ? 'tx-buy' : 'tx-sell'}">${tx.type === 'BUY' ? '매수' : '매도'}</span>
-              <strong style="font-size:0.95rem;">${stock.name}</strong>
+              <span class="tx-type-badge ${tx.type === 'BUY' ? 'tx-buy' : 'tx-sell'}" style="font-weight:700;">${tx.type === 'BUY' ? '매수' : '매도'}</span>
+              <strong style="font-size:0.95rem; color:#ffffff;">${stock.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${stock.code})</span></strong>
             </div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${tx.date}</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">🗓️ ${tx.date || '날짜 미지정'}</div>
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <div style="text-align:right;">
-              <div style="font-size:0.95rem; font-weight:600;">${tx.quantity.toLocaleString()}주 @ ${formatCurrency(tx.price, stock.currency)}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">수수료: ${formatCurrency(tx.fee || 0, stock.currency)}</div>
+              <div style="font-size:0.98rem; font-weight:700; color:${tx.type === 'BUY' ? '#60a5fa' : '#f87171'};">
+                ${formatCurrency(totalAmount, stock.currency)}
+              </div>
+              <div style="font-size:0.76rem; color:#cbd5e1; margin-top:2px;">
+                ${(tx.quantity || 0).toLocaleString()}주 @ ${formatCurrency(tx.price || 0, stock.currency)}
+              </div>
             </div>
             <button class="icon-btn" onclick="deleteTxDirect('${tx.id}')" title="거래 내역 삭제" style="color:#f87171; padding:4px 6px; border:none; background:transparent; cursor:pointer;">🗑️</button>
           </div>
