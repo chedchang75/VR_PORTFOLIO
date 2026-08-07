@@ -926,7 +926,7 @@ body {
         <div id="modal-next-schedule-banner" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:8px; padding:8px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-size:0.85rem;">🗓️</span>
-            <span style="font-size:0.78rem; font-weight:700; color:#a5b4fc;" id="modal-next-schedule-text">차기 매매 주차 기간 계산 중...</span>
+            <span style="font-size:0.78rem; font-weight:700; color:#a5b4fc;" id="modal-next-schedule-text">현재 매매 주차 기간 계산 중...</span>
           </div>
           <span style="font-size:0.72rem; font-weight:700; background:#6366f1; color:#ffffff; padding:2px 8px; border-radius:12px;" id="modal-next-rebalance-date-badge">D-Day 계산 중</span>
         </div>
@@ -2790,6 +2790,7 @@ body {
       }
     }
 
+    window.renderDashboard = renderDashboard;
     function renderDashboard() {
       const stocks = appStore.getStocks();
 
@@ -2918,6 +2919,7 @@ body {
 
       document.getElementById('total-invest-val').textContent = `₩${Math.round(totalInvestmentKRW).toLocaleString()}`;
       
+      const totalPnLPercent = totalInvestmentKRW > 0 ? (totalPnLKRW / totalInvestmentKRW) * 100 : 0;
       const pnlElement = document.getElementById('total-pnl-val');
       pnlElement.textContent = `₩${Math.round(totalPnLKRW).toLocaleString()} (${totalPnLPercent >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%)`;
       pnlElement.className = `summary-item-val ${totalPnLKRW >= 0 ? 'val-up' : 'val-down'}`;
@@ -3169,7 +3171,7 @@ body {
         const schedText = document.getElementById('modal-next-schedule-text');
         const badge = document.getElementById('modal-next-rebalance-date-badge');
         if (schedText) {
-          schedText.innerHTML = `차기 진행 <span style="color:#6366f1;">${schedule.nextWeekNum}주차</span> 기간 (${stock.cycleWeeks || 2}주): <strong style="color:#ffffff;">${schedule.periodText}</strong> (차기 매매/리밸런싱일: <strong style="color:#34d399;">${schedule.rebalanceDateStr}</strong>)`;
+          schedText.innerHTML = `현재 진행 <span style="color:#6366f1;">${schedule.nextWeekNum}주차</span> 기간 (${stock.cycleWeeks || 2}주): <strong style="color:#ffffff;">${schedule.periodText}</strong> (현재 매매/리밸런싱일: <strong style="color:#34d399;">${schedule.rebalanceDateStr}</strong>)`;
         }
         if (badge) {
           badge.textContent = schedule.dDayBadge;
