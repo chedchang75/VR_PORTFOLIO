@@ -2000,7 +2000,8 @@ body {
     }
 
     
-    const STORAGE_KEY = 'VR_MOBILE_PORTFOLIO_DATA_V5'; // ⭐ PC index.html과 동일한 100% 호환 DB 키!
+    const STORAGE_KEY = 'VR_MOBILE_PORTFOLIO_DATA_V5';
+    const ARCHIVE_STORAGE_KEY = 'VR_PORTFOLIO_ARCHIVE_DB'; // ⭐ PC index.html과 동일한 100% 호환 DB 키!
 
     const sampleTqqqHistory = [
       { week: 0, date: '25.10.27~11.9', price: 52.89, g: 15, evalE: 227321.22, targetV: 225572.43, minBand: 191736.57, maxBand: 259408.29, poolDelta: 0.00, poolCumulative: 47918.90, totalAsset: 227321.22, profitPercent: 0.0, profitAmount: 0.0, qty: 4298, avgPrice: 52.89 },
@@ -2147,8 +2148,11 @@ body {
         if (!this.data || !this.data.stocks) return;
         let needsSave = false;
 
+        // Initialize separate Archive DB for past history and transactions
+        this.archiveDB = this.loadArchiveDB();
+
         this.data.stocks.forEach(s => {
-          // Purge stale dummy prices for ALL stocks
+          // Keep currentPrice pure: NEVER fallback to avgPrice
           if (s.code === 'TQQQ' && (s.currentPrice === 64.00 || !s.currentPrice)) {
             s.currentPrice = 72.03;
             needsSave = true;
@@ -2156,37 +2160,27 @@ body {
             s.currentPrice = 234000;
             needsSave = true;
           } else if (s.code === '000660' && (s.currentPrice === 1781000 || s.currentPrice > 1600000 || !s.currentPrice)) {
-            s.currentPrice = 1427000;
+            s.currentPrice = 1426000;
             needsSave = true;
-          } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || !s.currentPrice)) {
-            s.currentPrice = 90725;
+          } else if (s.code === '122630' && (s.currentPrice === 45000 || s.currentPrice === 43000 || s.currentPrice === 113390 || !s.currentPrice)) {
+            s.currentPrice = 90690;
             needsSave = true;
-          } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice > 200000 || !s.currentPrice)) {
-            s.currentPrice = 93505;
-            needsSave = true;
-          } else if (!s.currentPrice || isNaN(s.currentPrice)) {
-            s.currentPrice = s.avgPrice || null;
+          } else if (s.code === '423920' && (s.currentPrice === 249500 || s.currentPrice === 104410 || s.currentPrice > 200000 || !s.currentPrice)) {
+            s.currentPrice = 93530;
             needsSave = true;
           }
 
-          // Purge stale 1781000 or 249500 from history rows if present
-          if (s.code === '000660' && s.history) {
-            s.history.forEach(h => {
-              if (h.price > 1600000) {
-                h.price = 1427000;
-                needsSave = true;
-              }
-            });
-          }
-          if (s.code === '005930' && s.history) {
-            s.history.forEach(h => {
-              if (h.price > 240000) {
-                h.price = 234000;
-                needsSave = true;
-              }
-            });
+          // Move/Sync history into separate archiveDB
+          if (s.history && s.history.length > 0) {
+            this.archiveDB.weeklyHistory[s.id] = JSON.parse(JSON.stringify(s.history));
           }
         });
+
+        // Sync past transactions into separate archiveDB
+        if (this.data.transactions && this.data.transactions.length > 0) {
+          this.archiveDB.transactions = JSON.parse(JSON.stringify(this.data.transactions));
+        }
+        this.saveArchiveDB();
 
         const tqqq = (this.data.stocks || []).find(s => s.code === 'TQQQ');
         if (tqqq) {
@@ -2202,6 +2196,20 @@ body {
         if (needsSave) {
           this.saveData();
         }
+      }
+
+      loadArchiveDB() {
+        try {
+          const raw = localStorage.getItem(ARCHIVE_STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return { weeklyHistory: {}, transactions: [], gridHistoryByWeek: {} };
+      }
+
+      saveArchiveDB() {
+        try {
+          localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(this.archiveDB));
+        } catch (e) {}
       }
 
       saveData(data = this.data) {
@@ -2854,7 +2862,7 @@ body {
         const sortedHistory = [...historyData].sort((a, b) => a.week - b.week);
         const lastRow = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
 
-        const basePrice = (stock.currentPrice && !isNaN(stock.currentPrice)) ? stock.currentPrice : (lastRow ? lastRow.price : stock.avgPrice);
+        const basePrice = (stock.currentPrice && !isNaN(stock.currentPrice) && stock.currentPrice > 0) ? stock.currentPrice : (lastRow ? lastRow.price : stock.avgPrice);
         const baseQty = lastRow ? lastRow.qty : stock.holdings;
         const basePool = lastRow ? (lastRow.poolCumulative || stock.vrTargetValue || 0) : (stock.vrTargetValue || 0);
 
