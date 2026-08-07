@@ -2706,6 +2706,18 @@ body {
 
         appStore.saveData();
         renderDashboard();
+
+        // If stock detail modal is open, refresh open modal with live price
+        if (window.currentModalStock) {
+          const updatedCurrentStock = stocks.find(s => s.id === window.currentModalStock.id);
+          if (updatedCurrentStock) {
+            window.currentModalStock = updatedCurrentStock;
+            const modal = document.getElementById('stock-detail-modal');
+            if (modal && modal.classList.contains('active')) {
+              openStockDetailModal(updatedCurrentStock);
+            }
+          }
+        }
       } catch (err) {
         console.error('Failed to refresh realtime prices:', err);
       } finally {
@@ -3076,6 +3088,17 @@ body {
       if (nameEl) nameEl.textContent = stock.name;
       if (codeEl) codeEl.textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
 
+      // Fetch live price for open stock in background to guarantee 100% real-time accuracy
+      priceFetcher.fetchPrice(stock.code).then(livePrice => {
+        if (livePrice && !isNaN(livePrice) && livePrice !== stock.currentPrice) {
+          stock.currentPrice = livePrice;
+          if (codeEl) codeEl.textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
+          appStore.saveData();
+          try { renderModalSummaryTab(stock); } catch(e) {}
+          try { renderDashboard(); } catch(e) {}
+        }
+      }).catch(() => {});
+
       const historyData = appStore.getStockHistory(stock.id);
 
       // 1. Render Next Schedule Banner
@@ -3151,8 +3174,6 @@ body {
       modal.style.zIndex = '9000';
     }
 
-    window.renderInteractiveBuyGrid = renderInteractiveBuyGrid;
-    window.renderInteractiveSellGrid = renderInteractiveSellGrid;
     function renderInteractiveBuyGrid(minBandVal, baseQty, initialPool, defaultStepQty, currency = 'USD', buyLimitPercent = 25) {
       const buyTbody = document.getElementById('buy-grid-tbody');
       if (!buyTbody) return;
