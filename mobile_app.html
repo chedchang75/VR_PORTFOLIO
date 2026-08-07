@@ -904,7 +904,7 @@ body {
           <h3 class="modal-title" id="modal-stock-name">종목명</h3>
           <span style="font-size:0.75rem; color:var(--text-muted);" id="modal-stock-code">코드</span>
         </div>
-        <button class="close-btn" id="close-stock-detail-modal">&times;</button>
+        <button type="button" class="close-btn" id="close-stock-detail-modal" onclick="window.closeStockDetailModalDirect(event)">&times;</button>
       </div>
 
       <div class="detail-tab-group">
@@ -917,8 +917,18 @@ body {
       <!-- Tab Content 1: VR Progress & Weekly Table -->
       <div id="detail-tab-progress-history" class="detail-tab-content active">
         <div style="display:flex; gap:6px; margin-bottom:4px; overflow-x:auto;">
-          <button class="btn-secondary" id="btn-open-init-0week-modal" style="font-size:0.75rem; padding:6px 10px; background:rgba(99,102,241,0.2); border-color:#6366f1; color:#a5b4fc; white-space:nowrap;">🌱 0주차 설정 (초기화)</button>
-          <button class="btn-secondary" id="btn-open-add-week-modal" style="font-size:0.75rem; padding:6px 10px; background:rgba(16,185,129,0.2); border-color:#10b981; color:#34d399; white-space:nowrap;">➕ 신규 주차 기록 추가</button>
+          <button class="btn-secondary" id="btn-open-init-0week-modal" onclick="window.openInit0WeekModalDirect(event)" style="font-size:0.75rem; padding:6px 10px; background:rgba(99,102,241,0.2); border-color:#6366f1; color:#a5b4fc; white-space:nowrap;">🌱 0주차 설정 (초기화)</button>
+          <button class="btn-secondary" id="btn-open-add-week-modal" onclick="window.openAddWeekModalDirect(event)" style="font-size:0.75rem; padding:6px 10px; background:rgba(16,185,129,0.2); border-color:#10b981; color:#34d399; white-space:nowrap;">➕ 신규 주차 기록 추가</button>
+        </div>
+
+        
+        <!-- Next Operating Period Schedule Banner -->
+        <div id="modal-next-schedule-banner" style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:8px; padding:8px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:0.85rem;">🗓️</span>
+            <span style="font-size:0.78rem; font-weight:700; color:#a5b4fc;" id="modal-next-schedule-text">차기 매매 주차 기간 계산 중...</span>
+          </div>
+          <span style="font-size:0.72rem; font-weight:700; background:#6366f1; color:#ffffff; padding:2px 8px; border-radius:12px;" id="modal-next-rebalance-date-badge">D-Day 계산 중</span>
         </div>
 
         <div class="glass-card" style="padding:10px; height:180px; position:relative; margin-bottom:10px;">
@@ -927,7 +937,7 @@ body {
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <div style="font-size:0.8rem; font-weight:700; color:var(--text-sub);">🗓️ 주차별 타임라인 내역</div>
-          <button class="btn-secondary" id="btn-modal-recalculate-all" style="font-size:0.72rem; padding:4px 8px; background:rgba(139,92,246,0.2); border-color:#8b5cf6; color:#c084fc; font-weight:700;">⚡ 전체 수식 업데이트</button>
+          <button class="btn-secondary" id="btn-modal-recalculate-all" onclick="window.recalculateCurrentStockDirect(event)" style="font-size:0.72rem; padding:4px 8px; background:rgba(139,92,246,0.2); border-color:#8b5cf6; color:#c084fc; font-weight:700;">⚡ 전체 수식 업데이트</button>
         </div>
 
         <div class="table-wrapper" style="max-height: 240px; overflow-y: auto;">
@@ -961,7 +971,7 @@ body {
       <!-- Tab Content 2: Summary Metrics -->
       <div id="detail-tab-summary" class="detail-tab-content">
         <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border-color); border-radius:12px; padding:10px 12px; margin-bottom:4px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" id="toggle-opt-accordion">
+          <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" id="toggle-opt-accordion" onclick="window.toggleOptAccordion(event)">
             <span style="font-size:0.85rem; font-weight:700; color:#a5b4fc;">⚙️ 종목별 VR 운용 옵션 설정</span>
             <span id="accordion-arrow-icon" style="font-size:0.8rem; color:var(--text-sub);">▼ (펼치기)</span>
           </div>
@@ -994,7 +1004,7 @@ body {
                 <input type="number" id="opt-buy-limit-percent" class="form-input" style="padding:6px; font-size:0.75rem;" value="25">
               </div>
             </div>
-            <button class="btn-primary" id="btn-save-strategy-options" style="width:100%; margin-top:10px; justify-content:center; padding:8px; font-size:0.8rem;">💾 운용 옵션 저장</button>
+            <button class="btn-primary" id="btn-save-strategy-options" onclick="window.saveStrategyOptionsDirect(event)" style="width:100%; margin-top:10px; justify-content:center; padding:8px; font-size:0.8rem;">💾 운용 옵션 저장</button>
           </div>
         </div>
 
@@ -1102,7 +1112,7 @@ body {
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title">➕ 신규 보유종목 추가</h3>
-        <button class="close-btn" id="close-add-stock-modal">&times;</button>
+        <button type="button" class="close-btn" id="close-add-stock-modal" onclick="window.closeCurrentModalDirect(this, event)">&times;</button>
       </div>
       <form id="add-stock-form">
         <div class="form-row">
@@ -1143,8 +1153,524 @@ body {
     </div>
   </div>
 
+  
+  <!-- Modal 3: Init 0-Week Setup Modal -->
+  <div class="modal-overlay" id="init-0week-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🌱 최초 0주차 수동 설정</h3>
+        <button type="button" class="close-btn" onclick="window.closeCurrentModalDirect(this, event)">&times;</button>
+      </div>
+
+      <form id="init-0week-form" onsubmit="return window.submitInit0WeekDirect(event)">
+        <div class="form-group">
+          <label class="form-label">시작 날짜</label>
+          <input type="date" id="init-start-date" class="form-input" value="2025-01-25" required>
+          <span style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;">종료 날짜는 설정된 주기(1주/2주)로 자동 산출됩니다.</span>
+        </div>
+
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group">
+            <label class="form-label">최초 보유주식수 (주)</label>
+            <input type="number" step="1" id="init-qty" class="form-input" placeholder="예: 2240" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">최초 예수금 (POOL)</label>
+            <input type="number" step="0.01" id="init-pool" class="form-input" placeholder="예: 47918.9" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px;">
+          <label class="form-label">0주차 목표가치 V (V2 / V값 수동 지정)</label>
+          <input type="number" step="0.01" id="init-target-v" class="form-input" placeholder="미입력 시 0주차 주식평가금(E)으로 자동 지정">
+          <span style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;">0주차의 목표 V값을 지정하면 해당 V값 기준으로 최소/최대 밴드가 산출됩니다.</span>
+        </div>
+
+        <p style="font-size:0.75rem; color:var(--text-sub); margin-top:10px;">
+          * G값, 밴드% 등의 공식은 상단 [⚙️ 종목별 VR 운용 옵션]의 설정값이 자동 적용됩니다.
+        </p>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" class="btn-secondary" onclick="window.closeCurrentModalDirect(this, event)" style="flex:1; justify-content:center; padding:10px;">취소</button>
+          <button type="submit" class="btn-primary" style="flex:2; justify-content:center; padding:10px;">0주차 저장 및 시작</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Edit Specific Week Record Modal -->
+  <div class="modal-overlay" id="edit-week-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="edit-week-modal-title">✏️ 주차 기록 수동 수정</h3>
+        <button type="button" class="close-btn" onclick="window.closeCurrentModalDirect(this, event)">&times;</button>
+      </div>
+
+      <form id="edit-week-form" onsubmit="return window.submitEditWeekDirect(event)">
+        <input type="hidden" id="edit-week-num">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">주차 표시</label>
+            <input type="text" id="edit-week-label" class="form-input" readonly style="opacity:0.7;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">날짜 범위</label>
+            <input type="text" id="edit-date-range" class="form-input" placeholder="예: 25.1.25~2.7" required>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group">
+            <label class="form-label">종가 (Price)</label>
+            <input type="number" step="0.01" id="edit-price" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">지수 (G)</label>
+            <input type="number" step="1" id="edit-g" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group">
+            <label class="form-label">보유 주식수 (Qty)</label>
+            <input type="number" step="1" id="edit-qty" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">예수금 변화액 (매수-, 매도+, 인출-, 입금+)</label>
+            <input type="number" step="0.01" id="edit-pool-delta" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px;">
+          <label class="form-label">목표가치 V (수동 설정/보정)</label>
+          <input type="number" step="0.01" id="edit-target-v" class="form-input" placeholder="자동 산출값 보정 시 입력">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn-secondary" id="btn-delete-week" onclick="window.deleteWeekFromEditModalDirect(event)" style="background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444; padding:10px;">🗑️ 주차 삭제</button>
+          <button type="button" class="btn-secondary" onclick="window.closeCurrentModalDirect(this, event)" style="padding:10px;">취소</button>
+          <button type="submit" class="btn-primary" style="flex:1; justify-content:center; padding:10px;">💾 저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Add New Week Record Modal -->
+  <div class="modal-overlay" id="add-week-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="add-week-modal-title">➕ 주차 기록 직접 입력 추가</h3>
+        <button type="button" class="close-btn" onclick="window.closeCurrentModalDirect(this, event)">&times;</button>
+      </div>
+
+      <form id="add-week-form" onsubmit="return window.submitAddWeekDirect(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">추가될 주차</label>
+            <input type="text" id="add-week-num-display" class="form-input" readonly style="opacity:0.7;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">날짜 범위</label>
+            <input type="text" id="add-week-date-range" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px;">
+          <label class="form-label" style="color:var(--accent-blue); font-weight:700;">해당 주차 종가 (Close Price)</label>
+          <input type="number" step="0.01" id="add-week-price" class="form-input" placeholder="직접 종가 입력" required style="border-color:#6366f1;">
+          <span style="font-size:0.7rem; color:var(--text-sub); margin-top:2px;">유저가 직접 지정한 실제 주차 종가 수치가 대입되며, 언제든 자유롭게 수정 가능합니다.</span>
+        </div>
+
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">보유 주식수 (Qty)</label>
+              <span id="add-week-qty-delta-label" style="font-size:0.7rem; font-weight:700; color:#34d399;">(변화량: 0주)</span>
+            </div>
+            <input type="number" step="1" id="add-week-qty" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">예수금 변화액 (매수-, 매도+, 인출-, 입금+)</label>
+            <input type="number" step="0.01" id="add-week-pool-delta" class="form-input" value="0" required>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" class="btn-secondary" onclick="window.closeCurrentModalDirect(this, event)" style="flex:1; justify-content:center; padding:10px;">취소</button>
+          <button type="submit" class="btn-primary" style="flex:2; justify-content:center; padding:10px;">+ 새 주차 기록 추가 및 V값 연산</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <!-- JavaScript Single-File Application Logic -->
   <script>
+
+    // --- Direct Openers & Handler Functions ---
+    window.openInit0WeekModalDirect = function(e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) {
+        alert('종목 정보가 선택되지 않았습니다. 종목 카드를 다시 클릭해주세요.');
+        return;
+      }
+      const stock = window.currentModalStock;
+      const initModal = document.getElementById('init-0week-modal');
+      if (!initModal) {
+        alert('0주차 설정 모달(#init-0week-modal)을 찾을 수 없습니다.');
+        return;
+      }
+      const qEl = document.getElementById('init-qty');
+      const pEl = document.getElementById('init-pool');
+      const vEl = document.getElementById('init-target-v');
+      if (qEl) qEl.value = stock.holdings || 2240;
+      if (pEl) pEl.value = stock.vrTargetValue || 47918.9;
+      if (vEl) vEl.value = stock.v1 || Math.round((stock.holdings * stock.currentPrice) * 100) / 100 || '';
+
+      initModal.classList.add('active');
+      initModal.style.display = 'flex';
+      initModal.style.zIndex = '9999';
+    };
+
+    window.openAddWeekModalDirect = function(e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) {
+        alert('종목 정보가 선택되지 않았습니다. 종목 카드를 다시 클릭해주세요.');
+        return;
+      }
+      const stock = window.currentModalStock;
+      const addModal = document.getElementById('add-week-modal');
+      if (!addModal) {
+        alert('신규 주차 추가 모달(#add-week-modal)을 찾을 수 없습니다.');
+        return;
+      }
+      const history = appStore.getStockHistory(stock.id);
+      const sorted = [...history].sort((a, b) => a.week - b.week);
+      const lastRow = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+      const cycleStep = stock.cycleWeeks || 2;
+      const nextWeek = lastRow ? (lastRow.week + cycleStep) : 0;
+
+      const wEl = document.getElementById('add-week-num-display') || document.getElementById('add-week-num');
+      const pEl = document.getElementById('add-week-price');
+      const qEl = document.getElementById('add-week-qty');
+      const dEl = document.getElementById('add-week-date-range');
+
+      if (wEl) wEl.value = `${nextWeek}주차`;
+      if (pEl) pEl.value = stock.currentPrice || (lastRow ? lastRow.price : 64.00);
+      if (qEl) qEl.value = lastRow ? lastRow.qty : stock.holdings;
+      if (dEl && !dEl.value) {
+        const now = new Date();
+        const mm = now.getMonth() + 1;
+        const dd = now.getDate();
+        dEl.value = `${mm}.${dd}~`;
+      }
+
+      addModal.classList.add('active');
+      addModal.style.display = 'flex';
+      addModal.style.zIndex = '9999';
+    };
+
+    window.openEditWeekModalDirect = function(weekNum, e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) return;
+      const stock = window.currentModalStock;
+      const history = appStore.getStockHistory(stock.id);
+      const row = history.find(h => h.week === parseInt(weekNum));
+      if (!row) return;
+
+      const editModal = document.getElementById('edit-week-modal');
+      if (!editModal) return;
+
+      const wNumEl = document.getElementById('edit-week-num');
+      const wLblEl = document.getElementById('edit-week-label');
+      const dateEl = document.getElementById('edit-date-range');
+      const priceEl = document.getElementById('edit-price');
+      const gEl = document.getElementById('edit-g');
+      const qtyEl = document.getElementById('edit-qty');
+      const poolDeltaEl = document.getElementById('edit-pool-delta');
+      const targetVEl = document.getElementById('edit-target-v');
+
+      if (wNumEl) wNumEl.value = row.week;
+      if (wLblEl) wLblEl.value = `${row.week}주차`;
+      if (dateEl) dateEl.value = row.date || '';
+      if (priceEl) priceEl.value = row.price;
+      if (gEl) gEl.value = row.g || stock.G || 15;
+      if (qtyEl) qtyEl.value = row.qty;
+      if (poolDeltaEl) poolDeltaEl.value = row.poolDelta || 0;
+      if (targetVEl) targetVEl.value = row.targetV || '';
+
+      editModal.classList.add('active');
+      editModal.style.display = 'flex';
+      editModal.style.zIndex = '9999';
+    };
+
+    window.recalculateCurrentStockDirect = function(e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) return;
+      const stock = window.currentModalStock;
+      appStore.recalculateAllWeeklyHistory(stock.id);
+      const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+      if (updatedStock) {
+        window.currentModalStock = updatedStock;
+        openStockDetailModal(updatedStock);
+      }
+      renderDashboard();
+      renderStrategies();
+      alert(`⚡ [${stock.name}] 전체 타임라인 및 V값이 최신 운용 옵션 기준으로 일괄 업데이트되었습니다!`);
+    };
+
+    window.deleteWeekRecordDirect = function(weekNum, e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) return;
+      const stock = window.currentModalStock;
+      if (confirm(`[${weekNum}주차] 기록을 삭제하시겠습니까?`)) {
+        appStore.deleteWeeklyRecord(stock.id, parseInt(weekNum));
+        const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+        if (updatedStock) {
+          window.currentModalStock = updatedStock;
+          openStockDetailModal(updatedStock);
+        }
+        renderDashboard();
+        renderStrategies();
+      }
+    };
+
+    window.deleteWeekFromEditModalDirect = function(e) {
+      if (e) e.stopPropagation();
+      if (!window.currentModalStock) return;
+      const stock = window.currentModalStock;
+      const weekNum = parseInt(document.getElementById('edit-week-num').value);
+      if (!isNaN(weekNum) && confirm(`[${weekNum}주차] 기록을 삭제하시겠습니까?`)) {
+        appStore.deleteWeeklyRecord(stock.id, weekNum);
+        const editModal = document.getElementById('edit-week-modal');
+        if (editModal) {
+          editModal.classList.remove('active');
+          editModal.style.display = 'none';
+        }
+        const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+        if (updatedStock) {
+          window.currentModalStock = updatedStock;
+          openStockDetailModal(updatedStock);
+        }
+        renderDashboard();
+        renderStrategies();
+      }
+    };
+
+
+    // --- Global Direct Handlers ---
+    
+    window.closeStockDetailModalDirect = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const modal = document.getElementById('stock-detail-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
+    };
+
+    window.closeCurrentModalDirect = function(el, e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const overlay = el ? el.closest('.modal-overlay') : null;
+      if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none';
+      }
+    };
+
+    window.toggleOptAccordion = function(e) {
+      if (e) e.stopPropagation();
+      const content = document.getElementById('opt-accordion-content');
+      const icon = document.getElementById('accordion-arrow-icon');
+      if (!content) return;
+
+      const isHidden = window.getComputedStyle(content).display === 'none';
+      if (isHidden) {
+        content.style.display = 'block';
+        if (icon) icon.textContent = '▲ (접기)';
+      } else {
+        content.style.display = 'none';
+        if (icon) icon.textContent = '▼ (펼치기)';
+      }
+    };
+
+    window.saveStrategyOptionsDirect = function(e) {
+      if (e) e.preventDefault();
+      if (!window.currentModalStock) {
+        alert('종목 정보가 올바르게 선택되지 않았습니다.');
+        return;
+      }
+      const stock = window.currentModalStock;
+
+      const cycleWeeks = parseInt(document.getElementById('opt-cycle-weeks').value) || 2;
+      const vrBandPercent = parseFloat(document.getElementById('opt-band-percent').value) || 15;
+      const G = parseFloat(document.getElementById('opt-g-val').value) || 15;
+      const qtyStep = parseFloat(document.getElementById('opt-qty-step').value) || 20;
+      const buyLimitPercent = parseFloat(document.getElementById('opt-buy-limit-percent').value) || 25;
+
+      stock.cycleWeeks = cycleWeeks;
+      stock.vrBandPercent = vrBandPercent;
+      stock.G = G;
+      stock.qtyStep = qtyStep;
+      stock.buyLimitPercent = buyLimitPercent;
+
+      appStore.saveData();
+      appStore.recalculateAllWeeklyHistory(stock.id);
+
+      const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+      if (updatedStock) {
+        window.currentModalStock = updatedStock;
+        openStockDetailModal(updatedStock);
+      }
+      renderDashboard();
+      renderStrategies();
+
+      alert(`⚙️ [${stock.name}] VR 운용 옵션이 저장되고 모든 수식이 재계산되었습니다!\n\n- 운용 주기: ${cycleWeeks}주차\n- VR 밴드: ${vrBandPercent}%\n- G 계수: ${G}\n- 수량 간격: ${qtyStep}주\n- 매수 상한: ${buyLimitPercent}%`);
+    };
+
+    window.submitInit0WeekDirect = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!window.currentModalStock) return false;
+      const stock = window.currentModalStock;
+      const startDate = document.getElementById('init-start-date').value || '2025-01-25';
+      const qty = parseFloat(document.getElementById('init-qty').value) || stock.holdings || 0;
+      const pool = parseFloat(document.getElementById('init-pool').value) || stock.vrTargetValue || 0;
+      const userTargetVVal = document.getElementById('init-target-v').value;
+      const userTargetV = userTargetVVal ? parseFloat(userTargetVVal) : null;
+      const finalClosePrice = stock.currentPrice || stock.avgPrice || 64.00;
+
+      appStore.setInitial0WeekHistory(stock.id, { startDate, qty, pool, closePrice: finalClosePrice, userTargetV });
+
+      const initModal = document.getElementById('init-0week-modal');
+      if (initModal) {
+        initModal.classList.remove('active');
+        initModal.style.display = 'none';
+      }
+
+      const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+      if (updatedStock) {
+        window.currentModalStock = updatedStock;
+        openStockDetailModal(updatedStock);
+      }
+      renderDashboard();
+      renderStrategies();
+      alert('🌱 0주차 설정이 성공적으로 완료되었습니다!');
+      return false;
+    };
+
+    window.submitAddWeekDirect = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!window.currentModalStock) return false;
+      const stock = window.currentModalStock;
+      const history = appStore.getStockHistory(stock.id);
+      const sorted = [...history].sort((a, b) => a.week - b.week);
+      const lastRow = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+      const cycleStep = stock.cycleWeeks || 2;
+
+      const dateText = document.getElementById('add-week-date-range').value || '';
+      const rawPrice = document.getElementById('add-week-price').value;
+      const rawQty = document.getElementById('add-week-qty').value;
+      const userPrice = (rawPrice && !isNaN(rawPrice)) ? parseFloat(rawPrice) : (stock.currentPrice || stock.avgPrice || 10);
+      const userQty = (rawQty && !isNaN(rawQty)) ? parseFloat(rawQty) : (stock.holdings || 1);
+      const userPoolDelta = parseFloat(document.getElementById('add-week-pool-delta').value || 0);
+
+      const nextWeekNum = lastRow ? (lastRow.week + cycleStep) : 0;
+      const gVal = lastRow ? lastRow.g : (stock.G || 15);
+      const evalE = Math.round(userQty * userPrice * 100) / 100;
+
+      appStore.addWeeklyRecord(stock.id, {
+        week: nextWeekNum,
+        date: dateText,
+        price: userPrice,
+        g: gVal,
+        evalE: evalE,
+        targetV: evalE,
+        minBand: evalE * 0.85,
+        maxBand: evalE * 1.15,
+        poolDelta: userPoolDelta,
+        poolCumulative: stock.vrTargetValue || 47918.9,
+        totalAsset: evalE,
+        profitPercent: 0,
+        profitAmount: 0,
+        qty: userQty,
+        avgPrice: stock.avgPrice
+      });
+
+      const addModal = document.getElementById('add-week-modal');
+      if (addModal) {
+        addModal.classList.remove('active');
+        addModal.style.display = 'none';
+      }
+
+      const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+      if (updatedStock) {
+        window.currentModalStock = updatedStock;
+        openStockDetailModal(updatedStock);
+      }
+      renderDashboard();
+      renderStrategies();
+      alert(`➕ ${nextWeekNum}주차 기록이 성공적으로 추가되었습니다!`);
+      return false;
+    };
+
+    window.submitEditWeekDirect = function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!window.currentModalStock) return false;
+      const stock = window.currentModalStock;
+      const weekNum = parseInt(document.getElementById('edit-week-num').value);
+      const dateRange = document.getElementById('edit-date-range').value;
+      const price = parseFloat(document.getElementById('edit-price').value);
+      const gVal = parseFloat(document.getElementById('edit-g').value);
+      const qty = parseFloat(document.getElementById('edit-qty').value);
+      const poolDelta = parseFloat(document.getElementById('edit-pool-delta').value || 0);
+      const userTargetV = parseFloat(document.getElementById('edit-target-v').value);
+
+      const evalE = qty * price;
+
+      appStore.updateWeeklyRecord(stock.id, weekNum, {
+        date: dateRange,
+        price: price,
+        g: gVal,
+        qty: qty,
+        poolDelta: poolDelta,
+        targetV: userTargetV && userTargetV > 0 ? userTargetV : evalE,
+        evalE: Math.round(evalE * 100) / 100
+      });
+
+      const editModal = document.getElementById('edit-week-modal');
+      if (editModal) {
+        editModal.classList.remove('active');
+        editModal.style.display = 'none';
+      }
+
+      const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+      if (updatedStock) {
+        window.currentModalStock = updatedStock;
+        openStockDetailModal(updatedStock);
+      }
+      renderDashboard();
+      renderStrategies();
+      alert(`✏️ ${weekNum}주차 기록이 성공적으로 수정되었습니다!`);
+      return false;
+    };
+
+    // --- Complete VR Strategy Class ---
     class VRStrategy {
       calculateNextV({ v1, pool, E, G = 10, deposit = 0 }) {
         const safeG = Math.max(1, Math.min(20, Number(G) || 10));
@@ -1156,9 +1682,264 @@ body {
         const v2 = term1 + term2 + term3 + term4;
         return Math.round(v2 * 100) / 100;
       }
+
+      generateGridOrders({ minBandVal, maxBandVal, baseQty, pool, qtyStep = 20, buyLimitRatio = 0.25 }) {
+        const buyGrid = [];
+        const sellGrid = [];
+        const initialPool = Number(pool) || 0;
+        const maxBuyCostLimit = initialPool * buyLimitRatio;
+
+        let currentQty = Math.max(1, baseQty);
+        let totalSpent = 0;
+
+        for (let idx = 0; idx < 30; idx++) {
+          const buyPrice = minBandVal / currentQty;
+          const buyCost = qtyStep * buyPrice;
+
+          if (totalSpent + buyCost > maxBuyCostLimit && idx > 0) break;
+
+          totalSpent += buyCost;
+          currentQty += qtyStep;
+
+          buyGrid.push({
+            orderIndex: idx + 1,
+            buyPrice: Math.round(buyPrice * 100) / 100,
+            buyQty: qtyStep,
+            buyCost: Math.round(buyCost * 100) / 100,
+            totalSpent: Math.round(totalSpent * 100) / 100,
+            remPool: Math.round((initialPool - totalSpent) * 100) / 100,
+            newQty: currentQty
+          });
+        }
+
+        currentQty = Math.max(1, baseQty);
+        let totalReceived = 0;
+
+        for (let idx = 0; idx < 30; idx++) {
+          const sellPrice = maxBandVal / currentQty;
+          if (currentQty <= 0) break;
+
+          const actualSellQty = Math.min(qtyStep, currentQty);
+          const sellProceeds = actualSellQty * sellPrice;
+
+          totalReceived += sellProceeds;
+          currentQty -= actualSellQty;
+
+          sellGrid.push({
+            orderIndex: idx + 1,
+            sellPrice: Math.round(sellPrice * 100) / 100,
+            sellQty: actualSellQty,
+            sellProceeds: Math.round(sellProceeds * 100) / 100,
+            accumulatedPool: Math.round((initialPool + totalReceived) * 100) / 100,
+            remQty: currentQty
+          });
+        }
+
+        return { buyGrid, sellGrid, maxBuyCostLimit };
+      }
+
+      evaluate({ currentPrice, holdingItem, strategyParams }) {
+        const { qty = 0, avgPrice = 0, evaluationAmount = 0 } = holdingItem || {};
+
+        const v1 = Number(strategyParams.v1) || (qty > 0 ? (qty * (avgPrice || currentPrice)) : 100000);
+        const pool = Number(strategyParams.pool) || 30000;
+        const G = Number(strategyParams.G) || 15;
+        const deposit = Number(strategyParams.deposit) || 0;
+        const bandRatio = (Number(strategyParams.bandPercent) || 15) / 100;
+        const cycleWeeks = Number(strategyParams.cycleWeeks) || 2;
+        const qtyStep = Number(strategyParams.qtyStep) || 20;
+        const buyLimitPercent = Number(strategyParams.buyLimitPercent) || 25;
+
+        const currentE = qty > 0 ? (qty * currentPrice) : evaluationAmount;
+        const v2 = this.calculateNextV({ v1, pool, E: currentE, G, deposit });
+
+        const minBandVal = v2 * (1 - bandRatio);
+        const maxBandVal = v2 * (1 + bandRatio);
+        const baseQty = Math.max(1, qty);
+
+        const gridOrders = this.generateGridOrders({
+          minBandVal,
+          maxBandVal,
+          baseQty,
+          pool,
+          qtyStep,
+          buyLimitRatio: buyLimitPercent / 100
+        });
+
+        const firstBuyTrigger = gridOrders.buyGrid[0] ? gridOrders.buyGrid[0].buyPrice : (minBandVal / baseQty);
+        const firstSellTrigger = gridOrders.sellGrid[0] ? gridOrders.sellGrid[0].sellPrice : (maxBandVal / baseQty);
+
+        let signalType = 'HOLD';
+        let message = `${cycleWeeks}주 주기 관망 (현재가 / 1차 매수점: ${firstBuyTrigger.toFixed(2)}, 1차 매도점: ${firstSellTrigger.toFixed(2)})`;
+        let targetQty = 0;
+
+        if (currentPrice <= firstBuyTrigger && currentPrice > 0) {
+          signalType = 'BUY';
+          targetQty = qtyStep;
+          message = `[VR 매수신호] 현재가가 1차 매수점(${firstBuyTrigger.toFixed(2)}) 이하 달성! ${qtyStep}주 매수 권장`;
+        } else if (currentPrice >= firstSellTrigger && currentPrice > 0 && qty > 0) {
+          signalType = 'SELL';
+          targetQty = qtyStep;
+          message = `[VR 매도신호] 현재가가 1차 매도점(${firstSellTrigger.toFixed(2)}) 이상 달성! ${qtyStep}주 매도 권장`;
+        }
+
+        return {
+          signalType,
+          message,
+          targetQty,
+          v1,
+          v2,
+          minBandVal,
+          maxBandVal,
+          firstBuyTrigger,
+          firstSellTrigger,
+          buyGrid: gridOrders.buyGrid,
+          sellGrid: gridOrders.sellGrid
+        };
+      }
     }
 
     const vrEngine = new VRStrategy();
+    window.vrEngine = vrEngine;
+
+    // --- Strategy Summary Tab Renderer ---
+    function renderModalSummaryTab(stock) {
+      if (!stock) return;
+
+      const historyData = appStore.getStockHistory(stock.id);
+      const sortedHistory = [...historyData].sort((a, b) => a.week - b.week);
+      const lastRow = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
+
+      const evalE = lastRow ? lastRow.evalE : (stock.holdings * stock.currentPrice);
+      const pool = lastRow ? (lastRow.poolCumulative || stock.vrTargetValue || 0) : (stock.vrTargetValue || 0);
+      const v1 = lastRow ? lastRow.targetV : (stock.v1 || evalE);
+
+      const currency = stock.currency || 'USD';
+      const bandRatio = (stock.vrBandPercent || 15) / 100;
+      const gVal = stock.G || 15;
+
+      const vrResult = vrEngine.evaluate({
+        currentPrice: stock.currentPrice,
+        holdingItem: { qty: stock.holdings, avgPrice: stock.avgPrice, evaluationAmount: evalE },
+        strategyParams: {
+          v1,
+          pool,
+          G: gVal,
+          deposit: 0,
+          bandPercent: stock.vrBandPercent || 15,
+          cycleWeeks: stock.cycleWeeks || 2,
+          qtyStep: stock.qtyStep || 20,
+          buyLimitPercent: stock.buyLimitPercent || 25
+        }
+      });
+
+      const minBand = vrResult ? vrResult.minBandVal : (v1 * (1 - bandRatio));
+      const maxBand = vrResult ? vrResult.maxBandVal : (v1 * (1 + bandRatio));
+
+      const v2 = vrResult ? vrResult.v2 : vrEngine.calculateNextV({
+        v1,
+        pool,
+        E: evalE,
+        G: gVal,
+        deposit: 0
+      });
+
+      const buyTargetPrice = Math.max(0, minBand / Math.max(1, stock.holdings));
+      const sellTargetPrice = Math.max(0, maxBand / Math.max(1, stock.holdings));
+
+      // Update Stat Cards
+      const v1El = document.getElementById('modal-val-v1');
+      const v2El = document.getElementById('modal-val-v2');
+      const minEl = document.getElementById('modal-val-minband');
+      const maxEl = document.getElementById('modal-val-maxband');
+      const buyTEl = document.getElementById('modal-val-buytarget');
+      const sellTEl = document.getElementById('modal-val-selltarget');
+
+      if (v1El) v1El.textContent = formatCurrency(v1, currency);
+      if (v2El) v2El.textContent = formatCurrency(v2, currency);
+      if (minEl) minEl.textContent = formatCurrency(minBand, currency);
+      if (maxEl) maxEl.textContent = formatCurrency(maxBand, currency);
+      if (buyTEl) buyTEl.textContent = formatCurrency(buyTargetPrice, currency);
+      if (sellTEl) sellTEl.textContent = formatCurrency(sellTargetPrice, currency);
+
+      // Signal Banner Status (BUY / SELL / HOLD)
+      const banner = document.getElementById('modal-signal-banner');
+      const signalText = document.getElementById('modal-signal-text');
+
+      if (banner && signalText) {
+        if (evalE <= minBand) {
+          banner.className = 'signal-banner signal-banner-buy';
+          signalText.innerHTML = `<span style="font-weight:700; color:#34d399;">📥 매수 구간 도달!</span> (평가금 ${formatCurrency(evalE, currency)} ≤ 최소밴드 ${formatCurrency(minBand, currency)})`;
+        } else if (evalE >= maxBand) {
+          banner.className = 'signal-banner signal-banner-sell';
+          signalText.innerHTML = `<span style="font-weight:700; color:#f87171;">📤 매도 구간 도달!</span> (평가금 ${formatCurrency(evalE, currency)} ≥ 최대밴드 ${formatCurrency(maxBand, currency)})`;
+        } else {
+          banner.className = 'signal-banner signal-banner-hold';
+          signalText.innerHTML = `<span style="font-weight:700; color:#94a3b8;">⚪ 관망 대기 구간</span> (최소밴드 ~ 최대밴드 범위 내 정상 운용 중)`;
+        }
+      }
+
+      // Populate Option Form Input Values
+      const cEl = document.getElementById('opt-cycle-weeks');
+      const bEl = document.getElementById('opt-band-percent');
+      const gEl = document.getElementById('opt-g-val');
+      const qEl = document.getElementById('opt-qty-step');
+      const lEl = document.getElementById('opt-buy-limit-percent');
+
+      if (cEl) cEl.value = stock.cycleWeeks || 2;
+      if (bEl) bEl.value = stock.vrBandPercent || 15;
+      if (gEl) gEl.value = stock.G || 15;
+      if (qEl) qEl.value = stock.qtyStep || 20;
+      if (lEl) lEl.value = stock.buyLimitPercent || 25;
+    }
+
+    function bindStrategyOptionEvents() {
+      const toggle = document.getElementById('toggle-opt-accordion');
+      const content = document.getElementById('opt-accordion-content');
+      const icon = document.getElementById('accordion-arrow-icon');
+
+      if (toggle && content) {
+        toggle.addEventListener('click', () => {
+          const isOpen = content.style.display !== 'none';
+          content.style.display = isOpen ? 'none' : 'block';
+          if (icon) icon.textContent = isOpen ? '▼ (펼치기)' : '▲ (접기)';
+        });
+      }
+
+      const btnSave = document.getElementById('btn-save-strategy-options');
+      if (btnSave) {
+        btnSave.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (!window.currentModalStock) return;
+          const stock = window.currentModalStock;
+
+          const cycleWeeks = parseInt(document.getElementById('opt-cycle-weeks').value) || 2;
+          const vrBandPercent = parseFloat(document.getElementById('opt-band-percent').value) || 15;
+          const G = parseFloat(document.getElementById('opt-g-val').value) || 15;
+          const qtyStep = parseFloat(document.getElementById('opt-qty-step').value) || 20;
+          const buyLimitPercent = parseFloat(document.getElementById('opt-buy-limit-percent').value) || 25;
+
+          stock.cycleWeeks = cycleWeeks;
+          stock.vrBandPercent = vrBandPercent;
+          stock.G = G;
+          stock.qtyStep = qtyStep;
+          stock.buyLimitPercent = buyLimitPercent;
+
+          appStore.recalculateAllWeeklyHistory(stock.id);
+
+          const updatedStock = appStore.getStocks().find(s => s.id === stock.id);
+          if (updatedStock) {
+            openStockDetailModal(updatedStock);
+          }
+          renderDashboard();
+          renderStrategies();
+
+          alert(`⚙️ [${stock.name}] VR 운용 옵션이 저장되고 모든 수식이 재계산되었습니다!\n- 주기: ${cycleWeeks}주차\n- 밴드: ${vrBandPercent}%\n- G계수: ${G}\n- 수량간격: ${qtyStep}주\n- 매수상한: ${buyLimitPercent}%`);
+        });
+      }
+    }
+
+    
     const STORAGE_KEY = 'VR_MOBILE_PORTFOLIO_DATA_V5'; // ⭐ PC index.html과 동일한 100% 호환 DB 키!
 
     const sampleTqqqHistory = [
@@ -1322,6 +2103,177 @@ body {
 
       getStocks() { return this.data.stocks || []; }
       getTransactions() { return this.data.transactions || []; }
+      
+      setInitial0WeekHistory(stockId, { startDate, qty, pool, closePrice, userTargetV }) {
+        const stock = (this.data.stocks || []).find(s => s.id === stockId);
+        if (!stock) return;
+
+        const cycleWeeks = stock.cycleWeeks || 2;
+        const daysToAdd = cycleWeeks * 7;
+
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setDate(end.getDate() + daysToAdd - 1);
+
+        const startMM = start.getMonth() + 1;
+        const startDD = start.getDate();
+        const endMM = end.getMonth() + 1;
+        const endDD = end.getDate();
+        const yy = String(start.getFullYear()).slice(-2);
+        const dateRangeStr = `${yy}.${startMM}.${startDD}~${endMM}.${endDD}`;
+
+        const price = Number(closePrice) || stock.currentPrice || stock.avgPrice || 10;
+        const initialQty = Number(qty) || 0;
+        const initialPool = Number(pool) || 0;
+        const evalE = Math.round(initialQty * price * 100) / 100;
+
+        const targetV = (userTargetV && !isNaN(userTargetV) && userTargetV > 0) ? Number(userTargetV) : evalE;
+
+        const bandRatio = (stock.vrBandPercent || 15) / 100;
+        const minBand = Math.round(targetV * (1 - bandRatio) * 100) / 100;
+        const maxBand = Math.round(targetV * (1 + bandRatio) * 100) / 100;
+
+        const record0 = {
+          week: 0,
+          date: dateRangeStr,
+          price: price,
+          g: stock.G || 15,
+          evalE: evalE,
+          targetV: targetV,
+          minBand: minBand,
+          maxBand: maxBand,
+          poolDelta: 0,
+          poolCumulative: initialPool,
+          totalAsset: Math.round((evalE + initialPool) * 100) / 100,
+          profitPercent: 0,
+          profitAmount: 0,
+          qty: initialQty,
+          avgPrice: stock.avgPrice || price
+        };
+
+        stock.history = [record0];
+        stock.holdings = initialQty;
+        stock.vrTargetValue = initialPool;
+        stock.v1 = targetV;
+
+        this.saveData();
+        this.recalculateAllWeeklyHistory(stockId);
+      }
+
+      addWeeklyRecord(stockId, newRecord) {
+        const stock = (this.data.stocks || []).find(s => s.id === stockId);
+        if (!stock) return;
+        if (!stock.history) stock.history = [];
+
+        stock.history = stock.history.filter(h => h.week !== newRecord.week);
+        stock.history.push(newRecord);
+        stock.history.sort((a, b) => a.week - b.week);
+
+        this.saveData();
+        this.recalculateAllWeeklyHistory(stockId);
+      }
+
+      updateWeeklyRecord(stockId, weekNum, updatedFields) {
+        const stock = (this.data.stocks || []).find(s => s.id === stockId);
+        if (!stock || !stock.history) return;
+
+        const record = stock.history.find(h => h.week === parseInt(weekNum));
+        if (record) {
+          Object.assign(record, updatedFields);
+          this.saveData();
+          this.recalculateAllWeeklyHistory(stockId);
+        }
+      }
+
+      deleteWeeklyRecord(stockId, weekNum) {
+        const stock = (this.data.stocks || []).find(s => s.id === stockId);
+        if (!stock || !stock.history) return;
+
+        stock.history = stock.history.filter(h => h.week !== parseInt(weekNum));
+        this.saveData();
+        this.recalculateAllWeeklyHistory(stockId);
+      }
+
+      recalculateAllWeeklyHistory(stockId) {
+        const stock = (this.data.stocks || []).find(s => s.id === stockId);
+        if (!stock || !stock.history || stock.history.length === 0) return;
+
+        const sorted = [...stock.history].sort((a, b) => a.week - b.week);
+
+        let cumulativePool = stock.vrTargetValue || sorted[0].poolCumulative || 0;
+        let prevV = sorted[0].targetV || sorted[0].evalE;
+        const initialQty = sorted[0].qty || stock.holdings || 1;
+        const initialPrice = sorted[0].price || stock.avgPrice || 10;
+
+        const bandRatio = (stock.vrBandPercent || 15) / 100;
+        const gVal = stock.G || 15;
+
+        for (let i = 0; i < sorted.length; i++) {
+          const row = sorted[i];
+          const qty = Number(row.qty) || initialQty;
+          const price = Number(row.price) || initialPrice;
+          const evalE = Math.round(qty * price * 100) / 100;
+
+          if (i === 0) {
+            cumulativePool = Number(row.poolCumulative) || cumulativePool;
+            if (row.targetV && row.targetV > 0) {
+              prevV = Number(row.targetV);
+            } else {
+              prevV = evalE;
+            }
+          } else {
+            const poolDelta = Number(row.poolDelta) || 0;
+            cumulativePool = Math.round((cumulativePool + poolDelta) * 100) / 100;
+
+            if (row.targetV && row.targetV > 0 && row.userTargetVOverride) {
+              prevV = Number(row.targetV);
+            } else {
+              prevV = vrEngine.calculateNextV({
+                v1: prevV,
+                pool: cumulativePool,
+                E: evalE,
+                G: row.g || gVal,
+                deposit: 0
+              });
+            }
+          }
+
+          const minBand = Math.round(prevV * (1 - bandRatio) * 100) / 100;
+          const maxBand = Math.round(prevV * (1 + bandRatio) * 100) / 100;
+
+          const totalAsset = Math.round((evalE + cumulativePool) * 100) / 100;
+
+          let profitAmount = 0;
+          let profitPercent = 0;
+
+          const baseCost = qty * (stock.avgPrice || initialPrice);
+          if (baseCost > 0) {
+            profitAmount = Math.round((evalE - baseCost) * 100) / 100;
+            profitPercent = Math.round((profitAmount / baseCost) * 10000) / 100;
+          }
+
+          row.evalE = evalE;
+          row.targetV = prevV;
+          row.minBand = minBand;
+          row.maxBand = maxBand;
+          row.poolCumulative = cumulativePool;
+          row.totalAsset = totalAsset;
+          row.profitAmount = profitAmount;
+          row.profitPercent = profitPercent;
+        }
+
+        stock.history = sorted;
+        const lastRow = sorted[sorted.length - 1];
+        if (lastRow) {
+          stock.v1 = lastRow.targetV;
+          stock.holdings = lastRow.qty;
+          stock.vrTargetValue = lastRow.poolCumulative;
+        }
+
+        this.saveData();
+      }
+
+
       getStockHistory(stockId) {
         const stock = (this.data.stocks || []).find(s => s.id === stockId);
         return stock ? (stock.history || []) : [];
@@ -1390,22 +2342,16 @@ body {
     }
 
     function setRowDimmedState(tr, isDimmed) {
-      const numInputs = tr.querySelectorAll('input[type="number"]');
       if (isDimmed) {
         tr.classList.add('row-dimmed');
-        tr.style.setProperty('opacity', '0.22', 'important');
-        tr.style.setProperty('filter', 'grayscale(100%) brightness(0.4)', 'important');
-        tr.style.setProperty('background-color', 'rgba(15, 23, 42, 0.95)', 'important');
-        
-        numInputs.forEach(inp => {
-          inp.disabled = true;
-          inp.style.setProperty('opacity', '0.3', 'important');
-        });
+        tr.style.setProperty('opacity', '0.9', 'important');
+        tr.style.removeProperty('filter');
+        tr.style.removeProperty('background-color');
 
         tr.querySelectorAll('td, td *, span, div').forEach(el => {
           if (!el.classList.contains('executed-chk')) {
-            el.style.setProperty('color', '#64748b', 'important');
-            el.style.setProperty('text-decoration', 'line-through', 'important');
+            el.style.removeProperty('color');
+            el.style.removeProperty('text-decoration');
           }
         });
       } else {
@@ -1413,11 +2359,6 @@ body {
         tr.style.removeProperty('opacity');
         tr.style.removeProperty('filter');
         tr.style.removeProperty('background-color');
-
-        numInputs.forEach(inp => {
-          inp.disabled = false;
-          inp.style.removeProperty('opacity');
-        });
 
         tr.querySelectorAll('td, td *, span, div').forEach(el => {
           el.style.removeProperty('color');
@@ -1760,18 +2701,299 @@ body {
       pnlElement.className = `summary-item-val ${totalPnLKRW >= 0 ? 'val-up' : 'val-down'}`;
     }
 
+    
+    
+    function computeNextSchedule(stock, historyData) {
+      const cycleWeeks = stock.cycleWeeks || 2;
+      const daysToAdd = cycleWeeks * 7;
+
+      const sorted = [...(historyData || [])].sort((a, b) => a.week - b.week);
+      const lastRow = sorted.length > 0 ? sorted[sorted.length - 1] : null;
+
+      let lastEndDate = new Date();
+
+      if (lastRow && lastRow.date) {
+        const parts = lastRow.date.split('~');
+        const endPart = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        
+        const dateMatch = endPart.match(/(\d{2,4})[.-](\d{1,2})[.-](\d{1,2})/) || endPart.match(/(\d{1,2})[.](\d{1,2})/);
+        if (dateMatch) {
+          const now = new Date();
+          let year = now.getFullYear();
+          let month = 1;
+          let day = 1;
+
+          if (dateMatch.length === 4) {
+            year = parseInt(dateMatch[1]);
+            if (year < 100) year += 2000;
+            month = parseInt(dateMatch[2]) - 1;
+            day = parseInt(dateMatch[3]);
+          } else if (dateMatch.length === 3) {
+            month = parseInt(dateMatch[1]) - 1;
+            day = parseInt(dateMatch[2]);
+          }
+          lastEndDate = new Date(year, month, day);
+        }
+      }
+
+      const nextStartDate = new Date(lastEndDate);
+      nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+      const nextEndDate = new Date(nextStartDate);
+      nextEndDate.setDate(nextEndDate.getDate() + daysToAdd - 1);
+
+      const startMM = nextStartDate.getMonth() + 1;
+      const startDD = nextStartDate.getDate();
+      const endMM = nextEndDate.getMonth() + 1;
+      const endDD = nextEndDate.getDate();
+      const endYY = String(nextEndDate.getFullYear()).slice(-2);
+
+      const periodText = `${endYY}.${startMM}.${startDD} ~ ${endMM}.${endDD}`;
+      const rebalanceDateStr = `${nextEndDate.getFullYear()}-${String(endMM).padStart(2, '0')}-${String(endDD).padStart(2, '0')}`;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetDate = new Date(nextEndDate);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const diffTime = targetDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+      
+      let dDayBadge = `D-${diffDays}`;
+      if (diffDays === 0) dDayBadge = 'D-Day (오늘 리밸런싱)';
+      else if (diffDays < 0) dDayBadge = `D+${Math.abs(diffDays)} (지남)`;
+
+      return {
+        nextWeekNum: lastRow ? (lastRow.week + cycleWeeks) : 0,
+        cycleWeeks,
+        periodText,
+        rebalanceDateStr,
+        dDayBadge
+      };
+    }
+
+    let modalHistoryChartInstance = null;
+
+    function renderModalHistoryChart(historyData, currency = 'USD') {
+      const canvas = document.getElementById('modalVrHistoryChart');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      if (modalHistoryChartInstance) {
+        modalHistoryChartInstance.destroy();
+        modalHistoryChartInstance = null;
+      }
+
+      if (!historyData || historyData.length === 0) return;
+
+      const sorted = [...historyData].sort((a, b) => a.week - b.week);
+      const labels = sorted.map(h => `${h.week}주차`);
+      const evalData = sorted.map(h => h.evalE);
+      const vData = sorted.map(h => h.targetV);
+      const minData = sorted.map(h => h.minBand);
+      const maxData = sorted.map(h => h.maxBand);
+
+      modalHistoryChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: '목표가치 (V)',
+              data: vData,
+              borderColor: '#818cf8',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '평가금 (E)',
+              data: evalData,
+              borderColor: '#34d399',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '최소 밴드',
+              data: minData,
+              borderColor: '#38bdf8',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: '최대 밴드',
+              data: maxData,
+              borderColor: '#f87171',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#94a3b8',
+                font: { size: 9 },
+                boxWidth: 10
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8', font: { size: 9 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            y: {
+              ticks: { color: '#94a3b8', font: { size: 9 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          }
+        }
+      });
+    }
+
+
+    function renderModalWeeklyHistoryTable(historyData, currency = 'USD') {
+      const tbody = document.getElementById('modal-progress-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!historyData || historyData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:20px; color:var(--text-sub);">🗓️ 등록된 주차별 기록 데이터가 없습니다. [🌱 0주차 설정]을 진행해주세요.</td></tr>`;
+        return;
+      }
+
+      const sorted = [...historyData].sort((a, b) => a.week - b.week);
+
+      sorted.forEach(row => {
+        const tr = document.createElement('tr');
+        const isLoss = row.profitPercent < 0;
+        const profitColor = isLoss ? 'var(--loss-blue)' : 'var(--profit-red)';
+        const profitSign = row.profitPercent > 0 ? '+' : '';
+
+        tr.innerHTML = `
+          <td style="font-weight:700;">${row.week}주차</td>
+          <td style="font-size:0.75rem; color:var(--text-sub);">${row.date || '-'}</td>
+          <td>${formatCurrency(row.price, currency)}</td>
+          <td>${row.g || 15}</td>
+          <td>${formatCurrency(row.evalE, currency)}</td>
+          <td style="font-weight:700; color:#a5b4fc;">${formatCurrency(row.targetV, currency)}</td>
+          <td style="color:var(--loss-blue);">${formatCurrency(row.minBand, currency)}</td>
+          <td style="color:var(--profit-red);">${formatCurrency(row.maxBand, currency)}</td>
+          <td>${row.poolDelta > 0 ? '+' : ''}${formatCurrency(row.poolDelta, currency)}</td>
+          <td style="font-weight:600;">${formatCurrency(row.poolCumulative, currency)}</td>
+          <td style="font-weight:700; color:${profitColor};">${profitSign}${(row.profitPercent || 0).toFixed(2)}%</td>
+          <td>
+            <div style="display:flex; gap:4px; justify-content:center;">
+              <button type="button" class="btn-secondary" onclick="window.openEditWeekModalDirect(${row.week}, event)" style="font-size:0.68rem; padding:2px 6px;">✏️</button>
+              <button type="button" class="btn-secondary" onclick="window.deleteWeekRecordDirect(${row.week}, event)" style="font-size:0.68rem; padding:2px 6px; background:rgba(239,68,68,0.2); border-color:#ef4444; color:#ef4444;">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.openStockDetailModal = openStockDetailModal;
     function openStockDetailModal(stock) {
       window.currentModalStock = stock;
       const modal = document.getElementById('stock-detail-modal');
       if (!modal) return;
 
-      document.getElementById('modal-stock-name').textContent = stock.name;
-      document.getElementById('modal-stock-code').textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
+      const nameEl = document.getElementById('modal-stock-name');
+      const codeEl = document.getElementById('modal-stock-code');
+      if (nameEl) nameEl.textContent = stock.name;
+      if (codeEl) codeEl.textContent = `${stock.code} · 현재가: ${formatCurrency(stock.currentPrice, stock.currency)}`;
 
-      renderInteractiveBuyGrid(278260.28, stock.holdings, stock.vrTargetValue || 47918.9, stock.qtyStep || 20, stock.currency, 25);
-      renderInteractiveSellGrid(376469.78, stock.holdings, stock.vrTargetValue || 47918.9, stock.qtyStep || 20, stock.currency);
+      const historyData = appStore.getStockHistory(stock.id);
+
+      // 1. Render Next Schedule Banner
+      try {
+        const schedule = computeNextSchedule(stock, historyData);
+        const schedText = document.getElementById('modal-next-schedule-text');
+        const badge = document.getElementById('modal-next-rebalance-date-badge');
+        if (schedText) {
+          schedText.innerHTML = `차기 진행 <span style="color:#6366f1;">${schedule.nextWeekNum}주차</span> 기간 (${stock.cycleWeeks || 2}주): <strong style="color:#ffffff;">${schedule.periodText}</strong> (차기 매매/리밸런싱일: <strong style="color:#34d399;">${schedule.rebalanceDateStr}</strong>)`;
+        }
+        if (badge) {
+          badge.textContent = schedule.dDayBadge;
+        }
+      } catch (e) {
+        console.error('Schedule calculation error:', e);
+      }
+
+      // 2. Render VR Trend History Chart
+      try {
+        renderModalHistoryChart(historyData, stock.currency);
+      } catch (e) {
+        console.error('History chart rendering error:', e);
+      }
+
+      // 3. Render Weekly Timeline History Table
+      try {
+        renderModalWeeklyHistoryTable(historyData, stock.currency);
+      } catch (e) {
+        console.error('Weekly table rendering error:', e);
+      }
+
+      // 4. Render Strategy Summary Tab
+      try {
+        renderModalSummaryTab(stock);
+      } catch (e) {
+        console.error('Summary tab rendering error:', e);
+      }
+
+      // 5. Render Buy & Sell Grids
+      try {
+        const sortedHistory = [...historyData].sort((a, b) => a.week - b.week);
+        const lastRow = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1] : null;
+        const evalE = lastRow ? lastRow.evalE : (stock.holdings * stock.currentPrice);
+        const pool = lastRow ? (lastRow.poolCumulative || stock.vrTargetValue || 0) : (stock.vrTargetValue || 0);
+        const v1 = lastRow ? lastRow.targetV : (stock.v1 || evalE);
+
+        const vrResult = vrEngine.evaluate({
+          currentPrice: stock.currentPrice,
+          holdingItem: { qty: stock.holdings, avgPrice: stock.avgPrice, evaluationAmount: evalE },
+          strategyParams: {
+            v1,
+            pool,
+            G: stock.G || 15,
+            deposit: 0,
+            bandPercent: stock.vrBandPercent || 15,
+            cycleWeeks: stock.cycleWeeks || 2,
+            qtyStep: stock.qtyStep || 20,
+            buyLimitPercent: stock.buyLimitPercent || 25
+          }
+        });
+
+        const minBand = vrResult ? vrResult.minBandVal : (v1 * 0.85);
+        const maxBand = vrResult ? vrResult.maxBandVal : (v1 * 1.15);
+
+        renderInteractiveBuyGrid(minBand, stock.holdings, pool, stock.qtyStep || 20, stock.currency, stock.buyLimitPercent || 25);
+        renderInteractiveSellGrid(maxBand, stock.holdings, pool, stock.qtyStep || 20, stock.currency);
+      } catch (e) {
+        console.error('Grid rendering error:', e);
+      }
 
       modal.classList.add('active');
+      modal.style.display = 'flex';
+      modal.style.zIndex = '9000';
     }
 
     function renderInteractiveBuyGrid(minBandVal, baseQty, initialPool, defaultStepQty, currency = 'USD', buyLimitPercent = 25) {
@@ -1784,8 +3006,15 @@ body {
 
       let currentQty = baseQty;
       let totalSpent = 0;
+      const stock = window.currentModalStock;
+      const savedState = (stock && stock.buyGridState) ? stock.buyGridState : {};
 
       for (let idx = 0; idx < 30; idx++) {
+        const rowKey = `buy_${idx + 1}`;
+        const state = savedState[rowKey] || {};
+        const isExecuted = !!state.executed;
+        const execDate = state.date || '';
+
         const buyPrice = minBandVal / currentQty;
         const buyCost = defaultStepQty * buyPrice;
 
@@ -1799,9 +3028,13 @@ body {
         tr.className = 'interactive-buy-row';
         tr.innerHTML = `
           <td style="text-align:center;">
-            <input type="checkbox" class="executed-chk" title="체결 완료 딤드 처리">
+            <input type="checkbox" class="executed-chk" ${isExecuted ? 'checked' : ''} title="체결 완료 처리">
+            <div class="exec-status-badge" style="font-size:0.62rem; font-weight:700; margin-top:2px;"></div>
           </td>
           <td style="font-weight:700; font-size:0.8rem;">${idx + 1}차</td>
+          <td>
+            <input type="date" class="exec-date-input form-input" value="${execDate}" style="padding:2px 4px; font-size:0.7rem; width:115px; text-align:center; background:#0f172a; color:#ffffff; border:1px solid var(--border-color); cursor:pointer;">
+          </td>
           <td class="buy-price-val" style="font-weight:700; color:var(--loss-blue);">${formatCurrency(buyPrice, currency)}</td>
           <td>
             <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
@@ -1816,8 +3049,33 @@ body {
         `;
 
         const chk = tr.querySelector('.executed-chk');
+        const dateInp = tr.querySelector('.exec-date-input');
+
+        const saveRowState = () => {
+          if (window.currentModalStock) {
+            if (!window.currentModalStock.buyGridState) window.currentModalStock.buyGridState = {};
+            window.currentModalStock.buyGridState[rowKey] = {
+              executed: chk.checked,
+              date: dateInp.value || new Date().toISOString().split('T')[0]
+            };
+            appStore.saveData();
+          }
+        };
+
+        if (isExecuted) {
+          setRowDimmedState(tr, true, 'buy');
+        }
+
         chk.addEventListener('change', () => {
           setRowDimmedState(tr, chk.checked);
+          if (chk.checked && !dateInp.value) {
+            dateInp.value = new Date().toISOString().split('T')[0];
+          }
+          saveRowState();
+        });
+
+        dateInp.addEventListener('change', () => {
+          saveRowState();
         });
 
         buyTbody.appendChild(tr);
@@ -1831,9 +3089,16 @@ body {
       sellTbody.innerHTML = '';
       let currentQty = baseQty;
       let currentPool = initialPool;
+      const stock = window.currentModalStock;
+      const savedState = (stock && stock.sellGridState) ? stock.sellGridState : {};
 
       for (let idx = 0; idx < 30; idx++) {
         if (currentQty <= 1) break;
+
+        const rowKey = `sell_${idx + 1}`;
+        const state = savedState[rowKey] || {};
+        const isExecuted = !!state.executed;
+        const execDate = state.date || '';
 
         const stepQty = Math.min(defaultStepQty, currentQty);
         const sellPrice = maxBandVal / currentQty;
@@ -1846,9 +3111,13 @@ body {
         tr.className = 'interactive-sell-row';
         tr.innerHTML = `
           <td style="text-align:center;">
-            <input type="checkbox" class="executed-chk" title="체결 완료 딤드 처리">
+            <input type="checkbox" class="executed-chk" ${isExecuted ? 'checked' : ''} title="체결 완료 처리">
+            <div class="exec-status-badge" style="font-size:0.62rem; font-weight:700; margin-top:2px;"></div>
           </td>
           <td style="font-weight:700; font-size:0.8rem;">${idx + 1}차</td>
+          <td>
+            <input type="date" class="exec-date-input form-input" value="${execDate}" style="padding:2px 4px; font-size:0.7rem; width:115px; text-align:center; background:#0f172a; color:#ffffff; border:1px solid var(--border-color); cursor:pointer;">
+          </td>
           <td class="sell-price-val" style="font-weight:700; color:var(--profit-red);">${formatCurrency(sellPrice, currency)}</td>
           <td>
             <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
@@ -1863,8 +3132,33 @@ body {
         `;
 
         const chk = tr.querySelector('.executed-chk');
+        const dateInp = tr.querySelector('.exec-date-input');
+
+        const saveRowState = () => {
+          if (window.currentModalStock) {
+            if (!window.currentModalStock.sellGridState) window.currentModalStock.sellGridState = {};
+            window.currentModalStock.sellGridState[rowKey] = {
+              executed: chk.checked,
+              date: dateInp.value || new Date().toISOString().split('T')[0]
+            };
+            appStore.saveData();
+          }
+        };
+
+        if (isExecuted) {
+          setRowDimmedState(tr, true, 'sell');
+        }
+
         chk.addEventListener('change', () => {
           setRowDimmedState(tr, chk.checked);
+          if (chk.checked && !dateInp.value) {
+            dateInp.value = new Date().toISOString().split('T')[0];
+          }
+          saveRowState();
+        });
+
+        dateInp.addEventListener('change', () => {
+          saveRowState();
         });
 
         sellTbody.appendChild(tr);

@@ -4,5 +4,5 @@ param (
 )
 $dest = "_checkpoints/$name"
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
-Copy-Item -Path "index.html", "css", "js", "strategies", "Mater_plan.md" -Destination $dest -Recurse -Force
+Copy-Item -Path "mobile_app.html", "css", "js", "strategies", "Mater_plan.md" -Destination $dest -Recurse -Force
 Write-Host "✅ 체크포인트 생성 완료: $dest" -ForegroundColor Green
