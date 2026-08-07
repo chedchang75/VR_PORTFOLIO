@@ -2870,6 +2870,56 @@ body {
 
         const schedule = computeNextSchedule(stock, historyData);
 
+        
+        // Calculate active week's executed buy/sell orders
+        const buyState = stock.buyGridState || {};
+        const sellState = stock.sellGridState || {};
+
+        let buyCount = 0, buyQty = 0, buyTotal = 0;
+        let sellCount = 0, sellQty = 0, sellTotal = 0;
+
+        Object.values(buyState).forEach(st => {
+          if (st && st.executed) {
+            buyCount++;
+            const qty = Number(st.actualQty || st.orderQty || 0);
+            const price = Number(st.actualPrice || st.price || 0);
+            buyQty += qty;
+            buyTotal += (qty * price);
+          }
+        });
+
+        Object.values(sellState).forEach(st => {
+          if (st && st.executed) {
+            sellCount++;
+            const qty = Number(st.actualQty || st.orderQty || 0);
+            const price = Number(st.actualPrice || st.price || 0);
+            sellQty += qty;
+            sellTotal += (qty * price);
+          }
+        });
+
+        const hasActiveTrades = (buyCount > 0 || sellCount > 0);
+        const tradeSummaryHtml = hasActiveTrades ? `
+          <div class="stock-card-trades-summary" style="margin-top:8px; padding:8px 12px; background:rgba(16, 185, 129, 0.08); border-radius:8px; border:1px solid rgba(16, 185, 129, 0.25); font-size:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-weight:700; color:#34d399;">🛒 이번 주차 체결 현황 요약</span>
+              <span style="background:rgba(52,211,153,0.2); color:#34d399; font-weight:700; padding:2px 8px; border-radius:4px; font-size:0.7rem;">총 ${buyCount + sellCount}건 체결 완료</span>
+            </div>
+            ${buyCount > 0 ? `
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#93c5fd; font-size:0.73rem; margin-top:2px;">
+                <span>📥 매수 체결 (${buyCount}건):</span>
+                <strong>+${buyQty.toLocaleString()}주 (${formatCurrency(buyTotal, stock.currency)})</strong>
+              </div>
+            ` : ''}
+            ${sellCount > 0 ? `
+              <div style="display:flex; justify-content:space-between; align-items:center; color:#fca5a5; font-size:0.73rem; margin-top:2px;">
+                <span>📤 매도 체결 (${sellCount}건):</span>
+                <strong>-${sellQty.toLocaleString()}주 (${formatCurrency(sellTotal, stock.currency)})</strong>
+              </div>
+            ` : ''}
+          </div>
+        ` : '';
+
         const card = document.createElement('div');
         card.className = 'glass-card stock-card';
         card.innerHTML = `
@@ -2903,6 +2953,7 @@ body {
             <span>🗓️ 현재 진행 <strong style="color:#818cf8;">${schedule.nextWeekNum}주차</strong> 기간: <strong style="color:#ffffff;">${schedule.periodText}</strong></span>
             <span class="schedule-badge" style="background:#6366f1; color:#ffffff; font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.7rem; flex-shrink:0;">${schedule.dDayBadge}</span>
           </div>
+          ${tradeSummaryHtml}
           <div class="signal-status-bar" style="margin-top:6px;">
             <span>전략: <strong>VR (${stock.cycleWeeks || 2}주)</strong></span>
             <span class="signal-indicator"><span class="signal-dot dot-hold"></span> 관망 (대기)</span>
